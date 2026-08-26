@@ -1,0 +1,5 @@
+# rulebase bundle layer：当 profile 列出本 bundle 时插入。
+# 行按包名引用，Node 解析到已安装的代码。
+- insert:
+    - id: rulebase
+      name: rulebase
