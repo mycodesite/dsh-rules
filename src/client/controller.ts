@@ -33,6 +33,14 @@ export class RuleController {
     else this.setState({ status: 'error', error: res.error.message })
   }
 
+  /** 当前项目 cwd；未选定项目时返回 null */
+  async currentCwd(): Promise<string | null> {
+    const res = await this.rpc.call('currentCwd', {})
+    if (!res.ok) return null
+    const value = res.value as { cwd: string | null } | undefined
+    return value?.cwd ?? null
+  }
+
   async reload(level: RuleLevel): Promise<void> {
     await this.rpc.call('reload', {})
     await this.load(level)

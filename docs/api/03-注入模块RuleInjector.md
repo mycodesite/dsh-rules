@@ -20,6 +20,7 @@ class RuleInjector {
   boot(): Promise<void>
   refresh(cwd?: string): Promise<void>
   renderFromCache(cwd?: string): string
+  currentProjectCwd(): string | undefined
   reload(): Promise<void>
   watch(): void
 }
@@ -54,6 +55,14 @@ class RuleInjector {
 - 缓存命中 → 对应 cwd 的合成结果。
 - 未命中该 cwd → 回退全局缓存；全局也空 → 返回 `''`。
 - 纯同步、零 IO，保证 `text` 签名 `(context) => string`。
+
+#### `currentProjectCwd()`
+
+同步返回「当前项目」cwd：最近创建的活跃 agent 的 cwd；无活跃 agent 或无有效 cwd 返回 `undefined`。
+
+- 数据来源：`watch()` 在 `agent/created` 时以 `agent.session.header.cwd` 记录到 `activeAgents`。
+- **空字符串过滤**：仅非空字符串视为有效 cwd（`typeof === 'string' && !== ''`）；最近 agent 为空 cwd 时自动回退到更早的有效 agent，避免返回空路径。
+- 供 `RulesService.currentCwd` 端点使用（UI 判断「是否已选定项目」）。
 
 #### `reload()`
 

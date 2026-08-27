@@ -46,7 +46,13 @@ export class RuleInjector {
   private reloadPending = false
   private debounceTimer: NodeJS.Timeout | undefined
 
-  constructor(private readonly ctx: Context, private readonly store: RuleStore) {}
+  private readonly ctx: Context
+  private readonly store: RuleStore
+
+  constructor(ctx: Context, store: RuleStore) {
+    this.ctx = ctx
+    this.store = store
+  }
 
   /** 启动：预加载全局规则缓存 */
   async boot(): Promise<void> {
@@ -68,6 +74,16 @@ export class RuleInjector {
   /** 同步读缓存（供 systemPrompt 段 text 使用；未命中回退全局） */
   renderFromCache(cwd?: string): string {
     return this.cache.get(cwd ?? GLOBAL_KEY) ?? this.cache.get(GLOBAL_KEY) ?? ''
+  }
+
+  /** 当前项目 cwd：最近创建的活跃 agent 的 cwd；无活跃 agent 或无 cwd 返回 undefined */
+  currentProjectCwd(): string | undefined {
+    const values = [...this.activeAgents.values()]
+    for (let i = values.length - 1; i >= 0; i--) {
+      // 仅非空字符串视为有效 cwd（activeAgents 可能存入 ''，见 watch 的 cwd ?? ''）
+      if (typeof values[i] === 'string' && values[i] !== '') return values[i]
+    }
+    return undefined
   }
 
   /** 变更收敛：异步重算缓存 + 显式 agent.inject（不唤醒驱动） */

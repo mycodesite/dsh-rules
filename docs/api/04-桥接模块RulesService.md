@@ -31,6 +31,7 @@ class RulesService {
 
 | endpoint | 入参（payload） | 业务返回值 | 说明 |
 |:--|:--|:--|:--|
+| `currentCwd` | — | `{ cwd: string \| null }` | 当前项目 cwd（`injector.currentProjectCwd()`；未选项目为 `null`）。读操作，不触发注入刷新 |
 | `list` | `{ level, cwd? }` | `Rule[]` | 列某级规则 |
 | `create` | `{ level, content }` | `Rule` | 新建规则（host 生成 id） |
 | `save` | `{ level, id, content }` | `Rule` | 保存（新建或覆盖） |
@@ -51,3 +52,4 @@ class RulesService {
 
 - `RulesService` 是普通对象，无需 Cordis Service 或 `@Remote` 标记（Connection RPC 与 Typert Remote 无关）。
 - 端点只承载对 md 文件的增删改查，不承载规则的「dsh 注册」——规则内容自始至终只在磁盘文件。
+- **cwd 解析（`resolveCwd`/`requireProjectCwd`）**：项目级读写以「client 传入 cwd 优先，缺省用 `injector.currentProjectCwd()`」解析真实项目路径；`create`/`save` 在项目级无有效 cwd 时抛「未选定项目」错误；`list` 无 cwd 返回 `[]`；`remove` 无 cwd 幂等跳过。

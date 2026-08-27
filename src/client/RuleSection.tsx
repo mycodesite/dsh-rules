@@ -24,8 +24,15 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [createMenuOpen, setCreateMenuOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  /** 当前项目 cwd；null = 未选定项目（仅项目 tab 有意义） */
+  const [projectCwd, setProjectCwd] = useState<string | null>(null)
 
   useEffect(() => {
+    if (level === 'project') {
+      void controller.currentCwd().then(setProjectCwd)
+    } else {
+      setProjectCwd(null)
+    }
     void controller.load(level)
   }, [controller, level])
 
@@ -41,6 +48,14 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
   const submitEdit = async (): Promise<void> => {
     if (!editing) return
     setBusy(true)
+    if (level === 'project') {
+      const cwd = await controller.currentCwd()
+      if (!cwd) {
+        setBusy(false)
+        window.alert('当前未选定项目，无法保存项目规则。请先选定一个项目（开启一个项目对话）后再试。')
+        return
+      }
+    }
     const ok = editing.id === null
       ? await controller.create(level, editing.content)
       : await controller.save(level, editing.id, editing.content)
@@ -111,7 +126,11 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
       ) : state.status === 'error' ? (
         <p style={styles.error} role="alert">{state.error}</p>
       ) : rows.length === 0 ? (
-        <p style={styles.muted}>暂无{LABELS[level]}规则，点击“+ 创建”添加。</p>
+        level === 'project' && projectCwd === null ? (
+          <p style={styles.warn} role="alert">未选定项目：请先开启一个项目对话（选定项目）后，再创建项目规则。</p>
+        ) : (
+          <p style={styles.muted}>暂无{LABELS[level]}规则，点击“+ 创建”添加。</p>
+        )
       ) : (
         <ul style={styles.list}>
           {rows.map((rule) => (
@@ -200,6 +219,7 @@ const styles: Record<string, CSSProperties> = {
   tabActive: { padding: '6px 12px', border: 'none', background: 'none', cursor: 'pointer', borderBottom: '2px solid #2563eb', fontWeight: 600, fontSize: 13 },
   muted: { color: '#888', fontSize: 13, margin: 0 },
   error: { color: '#dc2626', fontSize: 13, margin: 0 },
+  warn: { color: '#b45309', fontSize: 13, margin: 0 },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 4 },
   row: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px', border: '1px solid #e5e5e5', borderRadius: 6, cursor: 'default' },
   fileIcon: { width: 12, height: 14, background: '#93c5fd', borderRadius: 2, flexShrink: 0 },

@@ -22,6 +22,10 @@
        └─ 异步扫描 RuleStore.list(global + project) → 合成字符串缓存
             └─ systemPrompt 段 text 同步读缓存 → 注入提示词
 
+项目路径识别（currentCwd）
+  └─ RuleInjector.currentProjectCwd() ← agent/created 记录的 agent.session.header.cwd（最近活跃，空串过滤）
+       └─ RulesService 'currentCwd' 端点 → RuleController.currentCwd() → 设置面板「项目」tab/保存校验
+
 设置面板 UI（RuleSection）
   └─ RuleController(rpc)
        └─ connection.rpc.call('/rulebase', endpoint, payload)

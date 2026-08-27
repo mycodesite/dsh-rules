@@ -71,6 +71,7 @@ class RuleController {
   getSnapshot(): RuleListState
   subscribe(listener: () => void): () => void
   load(level: RuleLevel): Promise<void>
+  currentCwd(): Promise<string | null>
   reload(level: RuleLevel): Promise<void>
   create(level: RuleLevel, content: string): Promise<boolean>
   save(level: RuleLevel, id: string, content: string): Promise<boolean>
@@ -85,6 +86,10 @@ class RuleController {
 #### `load(level)`
 
 调用 `list` 端点，置 `loading` → `ready`（`rows`）或 `error`。
+
+#### `currentCwd()`
+
+查询当前项目 cwd（调 `currentCwd` 端点）。返回 `Promise<string | null>`：未选定项目时返回 `null`。供「项目规则」保存前校验与项目 tab 的「未选定项目」提示使用。
 
 #### `reload(level)`
 
