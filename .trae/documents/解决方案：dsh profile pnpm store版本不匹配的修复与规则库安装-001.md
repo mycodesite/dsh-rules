@@ -59,6 +59,20 @@ powershell -ExecutionPolicy Bypass -File ".trae\documents\scripts\修复dshPnpmS
 ```
 已在真实环境执行一遍，**幂等且通过**（重跑 pnpm install 与 dsh plugin add 均为“Already up to date”）。
 
+### 运维规则：pnpm 大版本升级后必须重链接（永久解决）
+
+store 版本（`v10`/`v11`/…）由 **pnpm 大版本**决定，改 store-dir 地址无效（base 不变，子目录仍按版本分）。每次 pnpm 跨大版本升级后，既有 profile 的 `node_modules` 仍链接旧 store，会再次触发 `ERR_PNPM_UNEXPECTED_STORE`。
+
+**永久规则（两条结合）**：
+1. **治本**：固定 pnpm 大版本——不随意 `pnpm self-update` 跨大版本升级；只要 pnpm 保持同一大版本，所有 profile 的 store 版本一致，永不冲突。
+2. **兜底**：每次 pnpm 大版本升级后，对每个 profile 依次执行一次脚本（只修 store、不装插件）：
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File ".trae\documents\scripts\修复dshPnpmStore.ps1" -Profile <profile名> -SkipAddPlugin
+   ```
+   脚本幂等：lockfile 未变时仅重链接、复用现有 store，无需重新下载。
+
+> 一句话规则：**“pnpm 大版本一升级，先对每个 profile 跑一遍 修复dshPnpmStore.ps1”**。
+
 ---
 
 ## 4. rulebase 装进真实 web profile 的落地结果（本次）

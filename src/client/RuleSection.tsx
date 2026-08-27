@@ -1,6 +1,6 @@
 // RuleSection：设置面板"规则"区。原生 HTML 元素 + 内联样式（client bundle 不 import UI primitives）。
-import { useEffect, useState, useSyncExternalStore } from 'react'
-import type { CSSProperties, JSX } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import type { CSSProperties, JSX, MouseEvent as ReactMouseEvent, RefObject } from 'react'
 import type { RuleController } from './controller.ts'
 import type { Rule, RuleLevel } from './types.ts'
 
@@ -10,6 +10,20 @@ export interface RuleSectionProps {
 
 const LEVELS: readonly RuleLevel[] = ['global', 'project']
 const LABELS: Record<RuleLevel, string> = { global: '全局', project: '项目' }
+
+/** 当 active 为 true（菜单/下拉打开）时，监听文档级 mousedown，点击容器 ref 外部即调用 onClose()。 */
+function useClickOutside<T extends HTMLElement>(active: boolean, onClose: () => void): RefObject<T | null> {
+  const ref = useRef<T>(null)
+  useEffect(() => {
+    if (!active) return
+    const handler = (e: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [active, onClose])
+  return ref
+}
 
 /** 编辑态：id 为 null 表示新建；undefined 表示尚未取得 id（新建前） */
 interface Editing {
@@ -24,6 +38,8 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [createMenuOpen, setCreateMenuOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  /** 「+ 创建」下拉：点击外部关闭（与行设置菜单共用 useClickOutside） */
+  const createWrapRef = useClickOutside<HTMLDivElement>(createMenuOpen, () => setCreateMenuOpen(false))
   /** 当前项目 cwd；null = 未选定项目（仅项目 tab 有意义） */
   const [projectCwd, setProjectCwd] = useState<string | null>(null)
 
@@ -85,7 +101,7 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
           <button type="button" style={styles.ghostButton} onClick={() => void reload()} disabled={busy}>
             刷新
           </button>
-          <div style={styles.createWrap}>
+          <div style={styles.createWrap} ref={createWrapRef}>
             <button
               type="button"
               style={styles.primaryButton}
@@ -177,17 +193,23 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
   )
 }
 
-/** 单行规则：左图标 + 内容 + 设置按钮（下拉：编辑/删除）；双击进入编辑 */
+/** 单行规则：左图标 + 内容 + 设置按钮（下拉：编辑/删除）；单击进入编辑，设置按钮区域除外 */
 function RuleRow({ rule, onEdit, onDelete }: { rule: Rule; onEdit: () => void; onDelete: () => void }): JSX.Element {
   const [open, setOpen] = useState(false)
+  const actionsRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false))
+  const handleRowClick = (e: ReactMouseEvent<HTMLLIElement>): void => {
+    // 点击 ⋮ 按钮或菜单项（位于 [data-rule-actions] 内）不触发行编辑
+    if ((e.target as HTMLElement).closest('[data-rule-actions]')) return
+    onEdit()
+  }
   return (
-    <li style={styles.row} onDoubleClick={onEdit}>
+    <li style={styles.row} onClick={handleRowClick}>
       <span style={styles.fileIcon} />
       <div style={styles.rowBody}>
         <div style={styles.rowTitle}>{rule.title}</div>
         <div style={styles.rowMeta}>{rule.id}.md</div>
       </div>
-      <div style={styles.rowActions}>
+      <div style={styles.rowActions} data-rule-actions ref={actionsRef}>
         <button
           type="button"
           style={styles.iconButton}
@@ -212,28 +234,28 @@ const styles: Record<string, CSSProperties> = {
   head: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   title: { margin: 0, fontSize: 18 },
   headActions: { display: 'flex', gap: 8, alignItems: 'center' },
-  intro: { margin: 0, color: '#888', fontSize: 13 },
+  intro: { margin: 0, color: 'var(--dsw-alias-label-tertiary)', fontSize: 13 },
   createWrap: { position: 'relative' },
-  tabs: { display: 'flex', gap: 4, borderBottom: '1px solid #e0e0e0' },
+  tabs: { display: 'flex', gap: 4, borderBottom: '1px solid var(--dsw-alias-separator-primary)' },
   tab: { padding: '6px 12px', border: 'none', background: 'none', cursor: 'pointer', borderBottom: '2px solid transparent', fontSize: 13 },
-  tabActive: { padding: '6px 12px', border: 'none', background: 'none', cursor: 'pointer', borderBottom: '2px solid #2563eb', fontWeight: 600, fontSize: 13 },
-  muted: { color: '#888', fontSize: 13, margin: 0 },
-  error: { color: '#dc2626', fontSize: 13, margin: 0 },
-  warn: { color: '#b45309', fontSize: 13, margin: 0 },
+  tabActive: { padding: '6px 12px', border: 'none', background: 'none', cursor: 'pointer', borderBottom: '2px solid var(--dsw-alias-brand-primary)', fontWeight: 600, fontSize: 13 },
+  muted: { color: 'var(--dsw-alias-label-tertiary)', fontSize: 13, margin: 0 },
+  error: { color: 'var(--dsw-alias-state-error-primary)', fontSize: 13, margin: 0 },
+  warn: { color: 'var(--dsw-alias-state-warn-primary)', fontSize: 13, margin: 0 },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 4 },
-  row: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px', border: '1px solid #e5e5e5', borderRadius: 6, cursor: 'default' },
-  fileIcon: { width: 12, height: 14, background: '#93c5fd', borderRadius: 2, flexShrink: 0 },
+  row: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px', border: '1px solid var(--dsw-alias-border-l1)', borderRadius: 6, cursor: 'default' },
+  fileIcon: { width: 12, height: 14, background: 'var(--dsw-alias-brand-primary)', borderRadius: 2, flexShrink: 0 },
   rowBody: { flex: 1, minWidth: 0 },
   rowTitle: { fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  rowMeta: { fontSize: 12, color: '#999' },
+  rowMeta: { fontSize: 12, color: 'var(--dsw-alias-label-tertiary)' },
   rowActions: { position: 'relative' },
-  iconButton: { border: 'none', background: 'none', cursor: 'pointer', padding: '4px 6px', fontSize: 16, color: '#666', lineHeight: 1 },
-  menu: { position: 'absolute', right: 0, top: '100%', background: '#fff', border: '1px solid #d0d0d0', borderRadius: 6, boxShadow: '0 2px 8px rgba(0,0,0,0.12)', zIndex: 10, display: 'flex', flexDirection: 'column', minWidth: 88, marginTop: 2 },
+  iconButton: { border: 'none', background: 'none', cursor: 'pointer', padding: '4px 6px', fontSize: 16, color: 'var(--dsw-alias-label-secondary)', lineHeight: 1 },
+  menu: { position: 'absolute', right: 0, top: '100%', background: 'var(--dsw-alias-bg-layer-2)', border: '1px solid var(--dsw-alias-border-l1)', borderRadius: 6, boxShadow: '0 2px 8px rgba(0,0,0,0.12)', zIndex: 10, display: 'flex', flexDirection: 'column', minWidth: 88, marginTop: 2 },
   menuItem: { border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', padding: '6px 12px', fontSize: 13 },
-  editor: { display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid #d0d0d0', borderRadius: 6, padding: 10, background: '#fafafa' },
+  editor: { display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid var(--dsw-alias-border-l1)', borderRadius: 6, padding: 10, background: 'var(--dsw-alias-bg-layer-1)' },
   textarea: { width: '100%', minHeight: 160, fontFamily: 'inherit', fontSize: 13, padding: 8, boxSizing: 'border-box', resize: 'vertical' },
   editorActions: { display: 'flex', justifyContent: 'flex-end', gap: 8 },
-  ghostButton: { border: '1px solid #d0d0d0', background: '#fff', cursor: 'pointer', padding: '4px 12px', borderRadius: 6, fontSize: 13 },
-  primaryButton: { border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', padding: '4px 12px', borderRadius: 6, fontSize: 13 },
-  dangerButton: { border: 'none', background: '#dc2626', color: '#fff', cursor: 'pointer', padding: '4px 12px', borderRadius: 6, fontSize: 13 },
+  ghostButton: { border: '1px solid var(--dsw-alias-border-l2)', background: 'var(--dsw-alias-button-ghost-active-fill)', color: 'var(--dsw-alias-label-primary)', cursor: 'pointer', padding: '4px 12px', borderRadius: 6, fontSize: 13 },
+  primaryButton: { border: 'none', background: 'var(--dsw-alias-button-primary-fill)', color: 'var(--dsw-alias-label-primary-inverted)', cursor: 'pointer', padding: '4px 12px', borderRadius: 6, fontSize: 13 },
+  dangerButton: { border: 'none', background: 'var(--dsw-alias-state-error-primary)', color: 'var(--dsw-alias-label-primary-inverted)', cursor: 'pointer', padding: '4px 12px', borderRadius: 6, fontSize: 13 },
 }
