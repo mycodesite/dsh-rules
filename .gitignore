@@ -1,0 +1,61 @@
+# ── 构建产物 ──
+build/
+lib/
+dist/
+*.tgz
+
+# ── 依赖 ──
+node_modules/
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# ── IDE ──
+.vs/
+.vscode/
+.codebuddy/
+.reasonix/
+.claude/
+.idea/
+*.user
+*.suo
+
+# ── 运行时数据 ──
+# 记忆引擎运行时数据（工作记忆，项目隔离）
+.dtm/
+# 互操作测试产物（隔离 dtm 二进制/字典/临时记忆库，勿提交）
+tests/interop/
+*.db
+*.db-shm
+*.db-wal
+*.log
+*.tmp
+dump-*.json
+
+# ── 环境与密钥 ──
+.env
+.env.*
+!.env.example
+
+# ── 内部文档与记录（不公开发布）──
+.trae/
+docs/变更记录/
+
+# ── 开发态补丁（含本机绝对路径，不公开）──
+cordis.local.yml
+cordis.yml
+
+# ── 操作系统 ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── 工具索引 ──
+.codegraph/
+.gitnexus/
+.agent-notes/
+.understand-anything/
+
+# 文档智能体
+AGENTS.md
+CLAUDE.md

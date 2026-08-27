@@ -1,0 +1,36 @@
+# Changelog
+
+本项目的所有显著变更记录于此。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
+版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+
+## [0.1.0] - 2026-08-27
+
+初始公开发布。dsh 插件「RuleBase」：全局 + 项目两级 Markdown 规则注入。
+
+### Added
+
+- **规则注入**：启动时扫描全局规则（`~/.dsh/rules/*.md`）；每个新对话按活跃 agent 的
+  `session.header.cwd` 扫描项目规则（`<cwd>/.dsh/rules/*.md`）；全局 + 项目全量组装、全量替换，
+  注入系统提示词。
+- **项目路径识别**：以最近活跃 agent 的 cwd 作为 `currentCwd`，dsh 切换项目后自动跟随；
+  无有效 cwd 时视为「未选定项目」。
+- **即变即用**：文件监听 + `agent.inject()`，保存规则后下一次模型请求自动采用。
+- **管理界面**：设置面板「规则」区，支持全局 / 项目 tab、新建、编辑、删除、刷新；
+  配色随 dsh 亮 / 深外观自动切换。
+- **RPC 桥**：`/rulebase` Connection RPC 通道（`authority: 'loopback'`，仅本机访问）。
+- **存储安全**：规则仅以 `.md` 文件持久化，不注册 dsh settings 命名空间、不写入 `settings.yaml`；
+  空目录 / 空文件 / 空规则场景启动安全。
+- **工具链**：tsdown host 构建（ESM + `.d.ts`）、esbuild client 构建（`__ModuleLoader__` 格式）、
+  smoke 测试、GitHub Actions CI（typecheck + test + build + pack）。
+
+### Fixed
+
+- `link:` 安装模式下补全 dsh 运行时 peer 依赖（`@deepseek-ai/dsh-*` 系列 devDependencies），
+  修复 host 加载失败。
+- 设置面板交互细节（单击编辑、菜单外部关闭、刷新按钮配色跟随）与深色主题适配。
+- 多项目切换场景下项目路径识别、规则存取与注入的一致性。
+
+### Changed
+
+- 开发态 overlay 改为生成式：`node scripts/make-dev-patch.mjs` 生成 `cordis.local.yml`（不提交），
+  消除仓库内本机绝对路径。

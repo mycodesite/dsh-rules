@@ -1,8 +1,20 @@
 # RuleBase
 
-dsh 插件：以「全局 + 项目」两级 Markdown 规则文件为源，在每次对话开始 / 每次系统提示词组装时把规则注入给 AI，并在 dsh 设置面板提供可视化规则管理界面。
+> DeepSeek Harness (dsh) 插件：全局 + 项目两级 Markdown 规则注入
+
+以「全局 + 项目」两级 Markdown 规则文件为源，在每次对话开始 / 每次系统提示词组装时把规则注入给 AI，并在 dsh 设置面板提供可视化规则管理界面。
 
 规则仅以 `.md` 文件持久化，**不注册 dsh settings 命名空间、不写入 `settings.yaml`**。
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/mycodesite/dsh-rules/releases)
+
+## 功能
+
+- **注入**：启动时扫描全局规则；每个新对话按 `agent.session.header.cwd` 扫描项目规则；全局 + 项目全量组装、全量替换，注入系统提示词。
+- **项目路径识别**：以「最近活跃 agent 的 `session.header.cwd`」作为当前项目路径（`currentCwd`），dsh 切换项目后自动跟随；无活跃 agent 或无有效 cwd 时视为「未选定项目」。
+- **即变即用**：文件监听 + `agent.inject()`；保存规则后下一次模型请求自动采用。
+- **管理界面**：设置面板「规则」区支持全局 / 项目 tab、新建（下拉选全局/项目）、编辑（单击行或设置菜单）、删除、刷新；设置菜单与新建下拉在点击其它区域自动关闭，配色随 dsh 亮/深外观自动切换（`--dsw-alias-*` 主题 token）；项目 tab 在未选定项目时提示「请先开启一个项目对话」，保存项目规则时无项目会弹窗提示。
 
 ## 存储位置
 
@@ -13,31 +25,35 @@ dsh 插件：以「全局 + 项目」两级 Markdown 规则文件为源，在每
 
 每个 `.md` 文件即一条规则；文件名（去扩展名）作为规则 id。
 
-## 功能
-
-- **注入**：启动时扫描全局规则；每个新对话按 `agent.session.header.cwd` 扫描项目规则；全局 + 项目全量组装、全量替换，注入系统提示词。
-- **项目路径识别**：以「最近活跃 agent 的 `session.header.cwd`」作为当前项目路径（`currentCwd`），dsh 切换项目后自动跟随；无活跃 agent 或无有效 cwd 时视为「未选定项目」。
-- **即变即用**：文件监听 + `agent.inject()`；保存规则后下一次模型请求自动采用。
-- **管理界面**：设置面板「规则」区支持全局 / 项目 tab、新建（下拉选全局/项目）、编辑（单击行或设置菜单）、删除、刷新；设置菜单与新建下拉在点击其它区域自动关闭，配色随 dsh 亮/深外观自动切换（`--dsw-alias-*` 主题 token）；项目 tab 在未选定项目时提示「请先开启一个项目对话」，保存项目规则时无项目会弹窗提示。
-
 ## 安装与运行
+
+### 发布态（从 GitHub 安装）
+
+```bash
+# 最新版（git 源安装，安装时执行 prepare 现场构建）
+dsh plugin add github:mycodesite/dsh-rules
+
+# 指定版本
+dsh plugin add github:mycodesite/dsh-rules#v0.1.0
+```
+
+> **注意**：`dsh plugin` 是 pnpm 转发器。pnpm 10 的默认安全策略会拦截安装时构建，需按 pnpm 报错提示在 profile 的 `pnpm-workspace.yaml` 中放行本包的构建脚本后重跑。
+
+也可以下载 [GitHub Releases](https://github.com/mycodesite/dsh-rules/releases) 中的最小化 tarball（仅含构建产物与 patch），本地安装：
+
+```bash
+dsh plugin add /path/to/rulebase-0.1.0.tgz
+```
 
 ### 开发态（源码直接挂载）
 
 ```bash
 npm install --legacy-peer-deps
-dsh web --patch ./cordis.yml          # 或 dsh --profile tui --patch ./cordis.yml
+node scripts/make-dev-patch.mjs          # 生成 cordis.local.yml（git 忽略，不提交）
+dsh web --patch ./cordis.local.yml       # 或 dsh --profile tui --patch ./cordis.local.yml
 ```
 
-`cordis.yml` 把 `src/host/index.ts` 按绝对路径挂载；`--patch` 叠加到当前 profile。
-
-### 发布态（作为 bundle）
-
-```bash
-npm run build
-```
-
-构建产物 `lib/` 与 `cordis.patch.yml`（`id: rulebase`、`name: rulebase`）随包发布；在 dsh profile 中列出该 bundle 即挂载。
+`cordis.local.yml` 由脚本按仓库绝对路径生成，仓库内不写死本机路径，克隆后可移植。
 
 ## 脚本
 
@@ -46,6 +62,9 @@ npm run build
 | `npm run build` | 构建 host 半（tsdown → `lib/index.mjs`）+ client 半（esbuild → `lib/client.js`） |
 | `npm run typecheck` | 类型检查（host + client 两个 project） |
 | `npm test` | 运行单测（`tests/smoke.test.ts`） |
+| `npm pack` | 产出最小发布 tarball（`files` 白名单） |
+| `node scripts/release.mjs` | typecheck + test + build + pack 一键发布准备 |
+| `node scripts/make-dev-patch.mjs` | 生成开发态补丁 `cordis.local.yml` |
 
 ## 目录结构
 
@@ -62,16 +81,28 @@ src/
 │  ├─ types.ts       # 最小类型（Rule / RpcResult）
 │  ├─ controller.ts  # RuleController：列表状态机 + rpc 客户端
 │  └─ RuleSection.tsx# 设置面板「规则」区 UI
+scripts/
+├─ build-client.mjs     # client 半 esbuild 构建
+├─ make-dev-patch.mjs   # 生成开发态补丁
+└─ release.mjs          # 发布准备（typecheck+test+build+pack）
 tests/
-└─ smoke.test.ts     # RuleStore 全量读写 / 路径解析
+└─ smoke.test.ts        # RuleStore 全量读写 / 路径解析
+docs/
+├─ API文档.md           # 模块 API 总览
+└─ api/                 # 分模块文档
+.github/workflows/ci.yml # CI：typecheck + test + build + pack（tag 自动发 Release）
 ```
 
 ## 文档
 
-- 各模块详细 API：见 [docs/API文档.md](docs/API文档.md) 与 `docs/api/` 下的分模块文档。
-- 设计方案与审核记录：见 `.trae/documents/`。
+- 模块 API：见 [docs/API文档.md](docs/API文档.md) 与 [docs/api/](docs/api/)。
+- 变更记录：见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 环境要求
 
 - Node.js `>= 22.5`
-- 依赖 `@deepseek-ai/dsh-*`（dsh 生态）与 `@deepseek-ai/cordis`
+- 依赖 `@deepseek-ai/dsh-*`（dsh 生态）与 `@deepseek-ai/cordis`，均为 `peerDependencies`（开发时以 `devDependencies` 提供）
+
+## 许可
+
+[MIT](LICENSE) © mycodesite

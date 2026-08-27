@@ -1,5 +1,0 @@
-# 开发态 overlay：按源文件绝对路径挂载 host 插件（无需安装）。
-# 用法：dsh web --patch ./cordis.yml   /   dsh --profile tui --patch ./cordis.yml
-- insert:
-    - id: rulebase
-      name: 'O:/mcpFs/dsh-plugin-build/dsh-rules/src/host/index.ts'
