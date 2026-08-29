@@ -51,6 +51,18 @@ dsh plugin add /path/to/rulebase-0.1.1.tgz
 dsh plugin --profile dsh-tui add /path/to/rulebase-0.1.1.tgz
 ```
 
+### 卸载
+
+```bash
+# web profile
+dsh plugin --profile web remove rulebase
+
+# tui profile
+dsh plugin --profile dsh-tui remove rulebase
+```
+
+> **注意**：`remove` 的参数必须用**注册名（包名）`rulebase`**，不能用安装源写法（如 `mycodesite/dsh-rules`、`github:mycodesite/dsh-rules`、`dsh-rules`）。`dsh plugin` 是 pnpm 转发器，`remove` 按 profile `package.json` 中依赖的 **key** 匹配——该 key 是 pnpm 安装时解析出的包名 `rulebase`，与安装时使用的源写法无关；用源写法会报 `ERR_PNPM_CANNOT_REMOVE_MISSING_DEPS: no such dependency found`（web 与 tui 行为一致）。卸载后 `dsh.profile.bundles` 层也会自动移除该插件。
+
 ### 开发态（源码直接挂载）
 
 ```bash
