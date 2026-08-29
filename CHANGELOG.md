@@ -14,6 +14,8 @@
 - **peer 优化**：新增 `peerDependenciesMeta`，将 `dsh-client-connection`、
   `dsh-host-apiproxy` 标记为可选，消除 tui profile 安装时的 peer 警告。
 - **安装兜底**：新增 `.npmrc` `legacy-peer-deps=true`。
+- **预构建产物入库**：`lib/` 提交入库、移除 `prepare` 脚本（构建改由 `prepack` 负责），
+  git 源安装与其他插件一致，无需 pnpm `allowBuilds` 放行。
 
 ## [0.1.0] - 2026-08-27
 

@@ -54,7 +54,7 @@
     }
   },
   "scripts": {
-    "prepare": "npm run build",
+    "prepack": "npm run build",
     "build": "npm run build:host && npm run build:client",
     "build:host": "tsdown",
     "build:client": "node scripts/build-client.mjs",

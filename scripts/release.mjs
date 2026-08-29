@@ -32,7 +32,7 @@ console.log(`
   2) 从 GitHub 直装（仓库公开后）
      dsh plugin add github:mycodesite/dsh-rules
      # 或指定版本：dsh plugin add github:mycodesite/dsh-rules#v0.1.0
-     # pnpm 安全策略下 git 源构建需在 profile 的 pnpm-workspace.yaml 中放行 prepare 脚本。
+     # 仓库含预构建产物（lib/），git 源安装无需放行构建脚本。
 
   3) 开发态挂载
      node scripts/make-dev-patch.mjs && dsh web --patch ./cordis.local.yml
