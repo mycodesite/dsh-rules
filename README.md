@@ -40,7 +40,14 @@ dsh plugin add github:mycodesite/dsh-rules#v0.1.1
 dsh plugin --profile dsh-tui add github:mycodesite/dsh-rules
 ```
 
-> **注意**：`dsh plugin` 是 pnpm 转发器。pnpm 10 的默认安全策略会拦截安装时构建，需按 pnpm 报错提示在 profile 的 `pnpm-workspace.yaml` 中放行本包的构建脚本后重跑。
+> **注意**：`dsh plugin` 是 pnpm 转发器。pnpm 11 的默认安全策略会拦截 git 托管包的安装时构建（`ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED` / `ERR_PNPM_IGNORED_BUILDS`）。按报错提示在 profile 的 `pnpm-workspace.yaml` 中放行本包构建脚本后重跑即可：
+>
+> ```yaml
+> allowBuilds:
+>   "rulebase@git+https://github.com/mycodesite/dsh-rules.git#82ac6659ed15a9b404afe85c6b4cb4b33c1bf50c": true
+> ```
+>
+> 两点注意：① **key 必须使用 pnpm 报错打印的精确形式**（`包名@git+URL#<commit>`，含 commit hash）——升版本重装后 key 会变化，届时按新报错更新即可；② key 内含 `:`，**必须加引号**，否则 YAML 会把冒号后内容解析为嵌套映射导致语法错误。
 
 也可以下载 [GitHub Releases](https://github.com/mycodesite/dsh-rules/releases) 中的最小化 tarball（仅含构建产物与 patch），本地安装：
 
@@ -63,6 +70,20 @@ dsh --profile dsh-tui --patch ./cordis.local.yml  # tui 模式
 > `.npmrc` 中已配置 `legacy-peer-deps=true`，开发态安装无需手动传 `--legacy-peer-deps` 标志。
 
 `cordis.local.yml` 由脚本按仓库绝对路径生成，仓库内不写死本机路径，克隆后可移植。
+
+## 排查
+
+#### AI IDE 内置终端：prepare 收尾失败
+
+> 若在 CodeBuddy 等 AI IDE 的内置终端执行安装，IDE 会通过 `NODE_OPTIONS` 向所有 node 子进程（含 pnpm）注入 safe-delete 护栏，在 prepare 收尾清理临时目录时可能拦截（`SAFE_DELETE_BULK_CONFIRM_REQUIRED`，批量删除 500 阈值）——表现为即使放行了构建脚本仍报错，且堆栈指向 `node-safe-delete-shim.cjs`。
+>
+> **解法**：改用系统普通终端（PowerShell / CMD）执行安装即可。普通终端无 `NODE_OPTIONS` 注入，不存在此问题。
+
+#### 加速器 MITM：`UNABLE_TO_VERIFY_LEAF_SIGNATURE`
+
+> 启用 Watt Toolkit / Steam++ 等加速器时，可能出现对 `github.com` 的 `UNABLE_TO_VERIFY_LEAF_SIGNATURE` WARN。这是加速器 MITM 证书所致，pnpm 自动重试后回退 git（schannel）拉取，**不影响安装，可忽略**。如需根治，可用 `NODE_EXTRA_CA_CERTS` 指向加速器导出的根证书 PEM。
+>
+> **安全提醒**：导入加速器根证书意味着该代理可解密 node 进程发往相关域名的全部 TLS 流量。建议仅在执行包安装时临时设置该变量、安装完成后移除；或仅在完全信任加速器供应商的前提下使用。
 
 ## 脚本
 
