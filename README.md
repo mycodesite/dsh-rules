@@ -48,10 +48,12 @@ dsh plugin add /path/to/rulebase-0.1.0.tgz
 ### 开发态（源码直接挂载）
 
 ```bash
-npm install --legacy-peer-deps
+npm install
 node scripts/make-dev-patch.mjs          # 生成 cordis.local.yml（git 忽略，不提交）
 dsh web --patch ./cordis.local.yml       # 或 dsh --profile tui --patch ./cordis.local.yml
 ```
+
+> `.npmrc` 中已配置 `legacy-peer-deps=true`，开发态安装无需手动传 `--legacy-peer-deps` 标志。
 
 `cordis.local.yml` 由脚本按仓库绝对路径生成，仓库内不写死本机路径，克隆后可移植。
 
@@ -65,6 +67,9 @@ dsh web --patch ./cordis.local.yml       # 或 dsh --profile tui --patch ./cordi
 | `npm pack` | 产出最小发布 tarball（`files` 白名单） |
 | `node scripts/release.mjs` | typecheck + test + build + pack 一键发布准备 |
 | `node scripts/make-dev-patch.mjs` | 生成开发态补丁 `cordis.local.yml` |
+| `npm run sync-dsh` | 同步 devDependencies 到 DSH 最新预发布版（`next` 通道） |
+| `npm run update-dsh` | 同步 + 安装 |
+| `npm run check-deps` | 严格模式验证依赖兼容性（CI 用） |
 
 ## 目录结构
 
@@ -84,7 +89,8 @@ src/
 scripts/
 ├─ build-client.mjs     # client 半 esbuild 构建
 ├─ make-dev-patch.mjs   # 生成开发态补丁
-└─ release.mjs          # 发布准备（typecheck+test+build+pack）
+├─ release.mjs          # 发布准备（typecheck+test+build+pack）
+└─ sync-dsh-deps.mjs    # 自动跟随 DSH next 通道同步 devDeps
 tests/
 └─ smoke.test.ts        # RuleStore 全量读写 / 路径解析
 docs/
