@@ -79,12 +79,6 @@ dsh --profile dsh-tui --patch ./cordis.local.yml  # tui 模式
 >
 > **解法**：改用系统普通终端（PowerShell / CMD）执行安装即可。普通终端无 `NODE_OPTIONS` 注入，不存在此问题。
 
-#### 加速器 MITM：`UNABLE_TO_VERIFY_LEAF_SIGNATURE`
-
-> 启用 Watt Toolkit / Steam++ 等加速器时，可能出现对 `github.com` 的 `UNABLE_TO_VERIFY_LEAF_SIGNATURE` WARN。这是加速器 MITM 证书所致，pnpm 自动重试后回退 git（schannel）拉取，**不影响安装，可忽略**。如需根治，可用 `NODE_EXTRA_CA_CERTS` 指向加速器导出的根证书 PEM。
->
-> **安全提醒**：导入加速器根证书意味着该代理可解密 node 进程发往相关域名的全部 TLS 流量。建议仅在执行包安装时临时设置该变量、安装完成后移除；或仅在完全信任加速器供应商的前提下使用。
-
 ## 脚本
 
 | 命令 | 说明 |
