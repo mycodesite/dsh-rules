@@ -3,6 +3,18 @@
 本项目的所有显著变更记录于此。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.1] - 2026-08-29
+
+### Changed
+
+- **依赖版本冲突修复**：将所有 `@deepseek-ai/dsh-*` devDependencies 与 peerDependencies
+  统一到 `0.1.1-rc.2`，消除 git 直装时因两代版本混挂导致的 ERESOLVE。
+- **新增构建脚本**：`sync-dsh` / `update-dsh` 自动跟随 DSH `next` 通道同步依赖；
+  `check-deps` 提供 CI 严格校验入口。
+- **peer 优化**：新增 `peerDependenciesMeta`，将 `dsh-client-connection`、
+  `dsh-host-apiproxy` 标记为可选，消除 tui profile 安装时的 peer 警告。
+- **安装兜底**：新增 `.npmrc` `legacy-peer-deps=true`。
+
 ## [0.1.0] - 2026-08-27
 
 初始公开发布。dsh 插件「RuleBase」：全局 + 项目两级 Markdown 规则注入。

@@ -7,7 +7,7 @@
 规则仅以 `.md` 文件持久化，**不注册 dsh settings 命名空间、不写入 `settings.yaml`**。
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/mycodesite/dsh-rules/releases)
+[![version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/mycodesite/dsh-rules/releases)
 
 ## 功能
 
@@ -34,7 +34,10 @@
 dsh plugin add github:mycodesite/dsh-rules
 
 # 指定版本
-dsh plugin add github:mycodesite/dsh-rules#v0.1.0
+dsh plugin add github:mycodesite/dsh-rules#v0.1.1
+
+# 指定 profile（web / tui 等）
+dsh plugin --profile dsh-tui add github:mycodesite/dsh-rules
 ```
 
 > **注意**：`dsh plugin` 是 pnpm 转发器。pnpm 10 的默认安全策略会拦截安装时构建，需按 pnpm 报错提示在 profile 的 `pnpm-workspace.yaml` 中放行本包的构建脚本后重跑。
@@ -42,7 +45,10 @@ dsh plugin add github:mycodesite/dsh-rules#v0.1.0
 也可以下载 [GitHub Releases](https://github.com/mycodesite/dsh-rules/releases) 中的最小化 tarball（仅含构建产物与 patch），本地安装：
 
 ```bash
-dsh plugin add /path/to/rulebase-0.1.0.tgz
+dsh plugin add /path/to/rulebase-0.1.1.tgz
+
+# 指定 profile 安装本地包
+dsh plugin --profile dsh-tui add /path/to/rulebase-0.1.1.tgz
 ```
 
 ### 开发态（源码直接挂载）
@@ -50,7 +56,8 @@ dsh plugin add /path/to/rulebase-0.1.0.tgz
 ```bash
 npm install
 node scripts/make-dev-patch.mjs          # 生成 cordis.local.yml（git 忽略，不提交）
-dsh web --patch ./cordis.local.yml       # 或 dsh --profile tui --patch ./cordis.local.yml
+dsh web --patch ./cordis.local.yml       # web 模式
+dsh --profile dsh-tui --patch ./cordis.local.yml  # tui 模式
 ```
 
 > `.npmrc` 中已配置 `legacy-peer-deps=true`，开发态安装无需手动传 `--legacy-peer-deps` 标志。
