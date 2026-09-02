@@ -27,6 +27,8 @@
 
 ## 安装与运行
 
+> ⚠️ **不要在插件市场更新本插件**。插件市场中升级的**不是本插件**，而是与之同名的**其他项目**。本插件**未打包至 npm**，但 npm 上有**重名项目**；下载安装该重名包会使 DeepSeek Harness **无法启动**。请始终通过下文的 GitHub 源或本地 tarball 安装本插件。
+
 ### 发布态（从 GitHub 安装）
 
 ```bash
@@ -37,6 +39,8 @@ dsh plugin add github:mycodesite/dsh-rules
 dsh plugin add github:mycodesite/dsh-rules#v0.1.2
 
 # 指定 profile（web / tui 等）
+dsh plugin --profile web add github:mycodesite/dsh-rules
+
 dsh plugin --profile dsh-tui add github:mycodesite/dsh-rules
 ```
 
@@ -48,7 +52,7 @@ dsh plugin --profile dsh-tui add github:mycodesite/dsh-rules
 dsh plugin add /path/to/rulebase-<版本>.tgz
 
 # 指定 profile 安装本地包
-dsh plugin --profile dsh-tui add /path/to/rulebase-<版本>.tgz
+dsh plugin --profile <模式> add /path/to/rulebase-<版本>.tgz
 ```
 
 ### 安装矩阵
