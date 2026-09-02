@@ -4,10 +4,19 @@
 
 以「全局 + 项目」两级 Markdown 规则文件为源，在每次对话开始 / 每次系统提示词组装时把规则注入给 AI，并在 dsh 设置面板提供可视化规则管理界面。
 
+**它能为你做什么**：
+
+- **把你想让 AI 记住的规矩，写进一处、处处生效**——项目规范、代码风格、命令约定、注意事项等，以 Markdown 写成规则文件，dsh 每次对话自动把它注进系统提示词，AI 无需你重复交代。
+- **全局一套 + 项目一套，互不干扰**——全局规则（`~/.dsh/rules/`）管所有项目共用的规矩；项目规则（`<cwd>/.dsh/rules/`）跟着 `agent.session.header.cwd` 走，切到哪个项目就套用哪个项目的规则，跨项目切换自动跟随。
+- **改一行、即时生效**——规则文件保存即被文件监听捕获，下一次模型请求自动采用，无需重启 dsh。
+- **可视化管理，不用碰命令行**——dsh 设置面板「规则」区可直接增删改查全局/项目规则、一键刷新，配色随 dsh 亮/深外观自动切换。
+
+一句话：RuleBase 让 AI 助手成为「懂你项目规矩的协作者」，把重复的口头交代固化成一劳永逸、随项目自动启用的规则库。
+
 规则仅以 `.md` 文件持久化，**不注册 dsh settings 命名空间、不写入 `settings.yaml`**。
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/mycodesite/dsh-rules/releases)
+[![version](https://img.shields.io/badge/version-0.1.2-blue.svg)](https://github.com/mycodesite/dsh-rules/releases)
 
 ## 功能
 
