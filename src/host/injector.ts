@@ -2,7 +2,7 @@
 import { watch, type FSWatcher } from 'node:fs'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import { createUserMessage } from './contract.ts'
 import { globalRulesDir, projectRulesDir } from './paths.ts'
 import { MAX_TOTAL_BYTES, type Rule, type RuleStore } from './store.ts'
 

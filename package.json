@@ -1,6 +1,6 @@
 {
   "name": "rulebase",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "engines": {
     "node": ">=22.5"
   },
@@ -55,11 +55,12 @@
   },
   "scripts": {
     "prepack": "npm run build",
-    "build": "npm run build:host && npm run build:client",
+    "build": "npm run build:host && npm run build:client && npm run check:artifact",
     "build:host": "tsdown",
     "build:client": "node scripts/build-client.mjs",
+    "check:artifact": "node scripts/check-artifact-imports.mjs",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.client.json",
-    "test": "node --test tests/smoke.test.ts",
+    "test": "node --test \"tests/*.test.ts\"",
     "pack:verify": "npm pack --dry-run",
     "sync-dsh": "node scripts/sync-dsh-deps.mjs",
     "update-dsh": "node scripts/sync-dsh-deps.mjs && npm install",

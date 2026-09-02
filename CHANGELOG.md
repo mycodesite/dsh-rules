@@ -3,6 +3,32 @@
 本项目的所有显著变更记录于此。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.2] - 2026-09-03
+
+### Fixed
+
+- **`link:` 安装后 dsh 无法启动（依赖解析失败）**：产物不再保留任何 `@deepseek-ai/*`
+  运行时导入——宿主契约函数（`createUserMessage` / `transportError`）改为本地逐字实现
+  （`src/host/contract.ts`），宿主包全部退化为编译期 `import type`。
+  此前以 `link:` 形态安装时，符号链接 realpath 逃逸使 Node 绕过宿主依赖兜底层，
+  裸导入直接 `ERR_MODULE_NOT_FOUND` 并放大为 dsh 启动失败。
+
+### Added
+
+- **构建期守卫**：`scripts/check-artifact-imports.mjs` 串入 `npm run build`
+  （覆盖 CI 与 `prepack`），产物含宿主包运行时导入即构建失败。
+- **契约单测**：`tests/contract.test.ts` 7 项，护栏化契约等价性
+  （role 固定 / UUID v4 / 结构化克隆脱钩 / 深度冻结 / transportError 分支）。
+- **CI 门禁**：`check:artifact` 显式步、无 `node_modules` 隔离导入（决定性判据）、
+  `lib/` 与 `src/` 同步校验。
+- **运行时零依赖**：任意安装形态（GitHub / tarball / `link:`）、任意新环境
+  （含无 `node_modules` 目录）均可直接运行；README 补安装矩阵与依赖模型说明。
+
+### Changed
+
+- 回写《插件发布规范》：发布后验收扩为三路径（git 源 + tarball + `link:`）；
+  新增 optional 治理纪律（禁止用 `peerDependenciesMeta.optional` 消除告警）。
+
 ## [0.1.1] - 2026-08-29
 
 ### Changed

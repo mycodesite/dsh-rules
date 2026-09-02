@@ -34,7 +34,7 @@
 dsh plugin add github:mycodesite/dsh-rules
 
 # 指定版本
-dsh plugin add github:mycodesite/dsh-rules#v0.1.1
+dsh plugin add github:mycodesite/dsh-rules#v0.1.2
 
 # 指定 profile（web / tui 等）
 dsh plugin --profile dsh-tui add github:mycodesite/dsh-rules
@@ -45,11 +45,23 @@ dsh plugin --profile dsh-tui add github:mycodesite/dsh-rules
 也可以下载 [GitHub Releases](https://github.com/mycodesite/dsh-rules/releases) 中的最小化 tarball（仅含构建产物与 patch），本地安装：
 
 ```bash
-dsh plugin add /path/to/rulebase-0.1.1.tgz
+dsh plugin add /path/to/rulebase-<版本>.tgz
 
 # 指定 profile 安装本地包
-dsh plugin --profile dsh-tui add /path/to/rulebase-0.1.1.tgz
+dsh plugin --profile dsh-tui add /path/to/rulebase-<版本>.tgz
 ```
+
+### 安装矩阵
+
+| 安装方式 | 命令 | 需构建 | 需该目录有 `node_modules` | 新环境 |
+|:--|:--|:--|:--|:--|
+| **tarball**（推荐分发） | `dsh plugin add /abs/rulebase-<v>.tgz` | 否 | 否 | ✅ |
+| **GitHub**（推荐分发） | `dsh plugin add github:mycodesite/dsh-rules#v<tag>` | 否（`lib/` 已入库） | 否 | ✅ |
+| **link:（开发态）· 源码树已构建** | `cd <checkout> && dsh plugin add .` | **是**（先 `npm run build`） | **否**（v0.1.2 起） | ⚠️ 需先构建 |
+| **link:（开发态）· 源码树未构建** | 同上 | — | — | ❌ 无 `lib/` 即失败（与依赖无关） |
+| **开发态 overlay** | 见下节（直接挂 `src/`） | 否 | 否（v0.1.2 起） | ⚠️ |
+
+> **运行时零依赖带来的改变（v0.1.2 起）**：已构建的源码树以 `link:` 安装时，**不再需要该目录下有 `node_modules`**。构建本身仍需 devDependencies（`tsdown` / `esbuild`）——这是开发期依赖，正常且不可避免。
 
 ### 卸载
 
@@ -80,9 +92,9 @@ dsh --profile dsh-tui --patch ./cordis.local.yml  # tui 模式
 
 | 命令 | 说明 |
 |:--|:--|
-| `npm run build` | 构建 host 半（tsdown → `lib/index.mjs`）+ client 半（esbuild → `lib/client.js`） |
+| `npm run build` | 构建 host 半（tsdown → `lib/index.mjs`）+ client 半（esbuild → `lib/client.js`）+ 产物守卫（`check:artifact`） |
 | `npm run typecheck` | 类型检查（host + client 两个 project） |
-| `npm test` | 运行单测（`tests/smoke.test.ts`） |
+| `npm test` | 运行单测（`tests/*.test.ts`：smoke 端到端护栏 + contract 契约护栏） |
 | `npm pack` | 产出最小发布 tarball（`files` 白名单） |
 | `node scripts/release.mjs` | typecheck + test + build + pack 一键发布准备 |
 | `node scripts/make-dev-patch.mjs` | 生成开发态补丁 `cordis.local.yml` |
@@ -126,7 +138,8 @@ docs/
 ## 环境要求
 
 - Node.js `>= 22.5`
-- 依赖 `@deepseek-ai/dsh-*`（dsh 生态）与 `@deepseek-ai/cordis`，均为 `peerDependencies`（开发时以 `devDependencies` 提供）
+- **运行时零依赖**：本插件对 `@deepseek-ai/dsh-*` 与 `@deepseek-ai/cordis` 仅有**编译期类型依赖**（`import type`，转译后擦除）；宿主契约函数（`createUserMessage` / `transportError`）已在 `src/host/contract.ts` 本地逐字实现。因此任意安装形态、任意新环境（包括无 `node_modules` 的目录）均可直接运行，不依赖宿主依赖闭包。
+- **构建期守卫**：`npm run build` 内置产物检查（`check:artifact`），产物含任何 `@deepseek-ai/*` 运行时导入即构建失败——这是本插件的核心安全不变量，由 CI 与 `npm pack`（prepack → build）双重覆盖。
 
 ## 许可
 

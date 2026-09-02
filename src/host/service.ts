@@ -1,6 +1,7 @@
 // RulesService：Connection 通用 RPC 通道的规则 CRUD 桥（UI↔host）。规则不进 dsh settings。
 import type { ConnectionRpcHandler } from '@deepseek-ai/dsh-client-connection'
-import { transportError, type RpcResult } from '@deepseek-ai/dsh-host-apiproxy/api'
+import type { RpcResult } from '@deepseek-ai/dsh-host-apiproxy/api'
+import { transportError } from './contract.ts'
 import type { RuleLevel } from './paths.ts'
 import type { RuleStore } from './store.ts'
 import type { RuleInjector } from './injector.ts'

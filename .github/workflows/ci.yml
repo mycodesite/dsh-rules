@@ -32,6 +32,32 @@ jobs:
       - name: Build
         run: npm run build
 
+      # 门禁显式可见（npm run build 内含 check:artifact，此处单列仅为失败时快速定位）
+      - name: Verify host artifact has zero host-package runtime imports
+        run: npm run check:artifact
+
+      # 决定性判据（解决方案-002 §8-V2）：无 node_modules 的隔离目录导入产物，
+      # 精确复刻 link: 安装的解析环境；改造前此步必 ERR_MODULE_NOT_FOUND。
+      - name: Isolated import (no node_modules)
+        shell: bash
+        run: |
+          set -e
+          ISO="$(mktemp -d)"
+          cp -r lib "$ISO/lib"
+          cp package.json "$ISO/"
+          node --input-type=module \
+            -e "await import('file://$ISO/lib/index.mjs'); console.log('isolated import OK')"
+          rm -rf "$ISO"
+
+      # N1 唯一自动化拦截点（§7.3）：git 源安装不执行 prepack，
+      # 装的是仓库提交态 lib/，产物落后于 src/ 即失败。
+      - name: Verify committed lib/ matches src/ build
+        shell: bash
+        run: |
+          set -e
+          git diff --quiet -- lib/ || {
+            echo "lib/ 与提交态不一致：请在本地执行 npm run build 并提交 lib/"; exit 1; }
+
       - name: Verify minimal package
         run: npm pack --dry-run
 
