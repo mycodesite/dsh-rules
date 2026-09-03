@@ -19,6 +19,8 @@ yarn-error.log*
 *.user
 *.suo
 .dsh/
+.dsh-vision-toolkit/
+.kb/
 
 # ── 运行时数据 ──
 # 记忆引擎运行时数据（工作记忆，项目隔离）
