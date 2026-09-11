@@ -55,10 +55,11 @@ dsh plugin --profile dsh-tui add github:mycodesite/dsh-rules
 
 > **注意**：`dsh plugin` 是 pnpm 转发器。发布包已含预构建产物（`lib/`），git 源安装即装即用，**无需**在 profile 的 `pnpm-workspace.yaml` 中放行构建脚本（`allowBuilds`）。
 
-> **dsh 版本支持线（v0.1.3 起）：dsh ≥0.1.5-rc.1**。0.1.5 起 client-connection 的 `rpc.handle` 两参化、
-> `connection` 服务先于 `webServer` 可用，本插件已按新范式适配（RPC 通道双依赖延迟注册、
-> per-channel `authority` 选项废弃、鉴权由传输层 BrowserAuth + Host/Origin fence 统一接管）。
-> 面板操作失败不再静默挂起：任何失败均以错误文本或弹窗可见呈现。旧版 dsh（≤0.1.1-rc.2）不在支持范围。
+> **dsh 版本支持线（v0.1.4 起）：dsh ≥0.1.5-rc.1**。0.1.5 起 client-connection 的 `rpc.handle` 两参化、
+> `connection` 服务先于 `webServer` 可用，本插件已按新范式适配（规则端点经 `/api` 共享通道精确路由
+> `/api/rulebase/<op>` 承载、per-channel `authority` 选项废弃、鉴权由传输层 BrowserAuth + Host/Origin
+> fence 统一接管）。面板操作失败不再静默挂起：任何失败均以错误文本或弹窗可见呈现。
+> 旧版 dsh（≤0.1.1-rc.2）不在支持范围。
 
 也可以下载 [GitHub Releases](https://github.com/mycodesite/dsh-rules/releases) 中的最小化 tarball（仅含构建产物与 patch），本地安装：
 

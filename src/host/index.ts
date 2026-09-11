@@ -7,6 +7,7 @@ import type {} from '@deepseek-ai/dsh-llm'
 import { RuleStore } from './store.ts'
 import { GUIDANCE, RuleInjector } from './injector.ts'
 import { RulesService } from './service.ts'
+import { bridgeRpc } from './bridge.ts'
 
 // 自定义注入来源：扩展 MessageSourceMap（merge-extensible，见 dsh-llm message.ts）
 declare module '@deepseek-ai/dsh-llm' {
@@ -37,11 +38,19 @@ export function apply(ctx: Context): void {
     })
   })
 
-  // Connection 通用 RPC：UI↔host 的规则文件管理桥。
-  // 0.1.5+ 时序：connection 服务先于 webServer 可用（client-connection 启动依赖 ['webServer']→['credentials']），
-  // 必须双依赖就绪后再 handle，否则其内部 owner.webServer.register 直接 TypeError，通道注册丢失（详见调查报告-001）。
-  ctx.inject(['connection', 'webServer'], (c) => {
-    c.connection.rpc.handle('/rulebase', service.dispatch)
+  // Connection /api 精确路由：UI↔host 的规则文件管理桥（0.1.5+ 范式，详见分析报告-001 §二）。
+  // 仅依赖 connection（对插件 fiber 可达，旧代码 inject 触发已证）；fetch.register 内部仅
+  // fetchRoutes.set（owner.effect 失配自动清理，dsh-client-connection lib:594-600），零 webServer 触碰；
+  // /api 共享 handler 先查 fetchRoutes 再查 interceptor（:576-584），与 api-gateway（interceptor）无冲突。
+  ctx.inject(['connection'], (c) => {
+    for (const op of ['list', 'create', 'save', 'remove', 'reload', 'currentCwd'] as const) {
+      c.connection.fetch.register({
+        path: `/api/rulebase/${op}`,
+        methods: ['POST'],
+        requestBody: 'buffered',
+        fetch: (request) => bridgeRpc(request, op, service.dispatch),
+      })
+    }
   })
 
   injector.watch()

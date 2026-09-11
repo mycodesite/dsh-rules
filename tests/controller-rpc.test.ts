@@ -103,7 +103,12 @@ test('currentCwd：传输失败返回 null（按"未选定项目"降级，不抛
 
 test('host apply：RPC 通道注册使用双依赖注入且无废弃第三参（守卫回归）', () => {
   const src = readFileSync(new URL('../src/host/index.ts', import.meta.url), 'utf8')
-  assert.match(src, /ctx\.inject\(\['connection',\s*'webServer'\]/)
-  assert.match(src, /rpc\.handle\('\/rulebase',\s*service\.dispatch\)/)
+  assert.match(src, /ctx\.inject\(\['connection'\]/)
+  assert.match(src, /fetch\.register\(\{/)
+  assert.match(src, /path:\s*`\/api\/rulebase\/\$\{op\}`/)
+  assert.match(src, /'list',\s*'create',\s*'save',\s*'remove',\s*'reload',\s*'currentCwd'/)
+  assert.match(src, /requestBody:\s*'buffered'/)
+  assert.doesNotMatch(src, /rpc\.handle\(/)
+  assert.doesNotMatch(src, /'webServer'/)
   assert.doesNotMatch(src, /authority:\s*'loopback'/)
 })

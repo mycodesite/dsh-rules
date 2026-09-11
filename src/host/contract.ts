@@ -13,8 +13,10 @@
 //   dsh-host-apiproxy/lib/types/api/rpc.js L24-29、rpc.d.ts L173/L181-195
 // 0.1.5 适配补记（详见 .trae/documents/调查报告与解决方案：dsh升级0.1.5后规则界面加载与保存失败-001）：
 //   dsh-client-connection：rpc.handle 两参化（第三参 authority 废弃，鉴权归传输层 BrowserAuth 401 + Host/Origin fence 403）；
-//   connection 服务先于 webServer 可用（client-connection 启动依赖 ['webServer']→['credentials']）——
-//   host 半注册 RPC 通道须 ctx.inject(['connection','webServer']) 双依赖延迟注册（src/host/index.ts）。
+//   0.1.5 不变量：webServer 仅 client-connection 自身可触碰，/api 层消费者一律经 connection
+//   （首方 fetch.register 先例：api-session-controller / client-file-upload / ui-deliverables / session-log-export）——
+//   host 半以 connection.fetch.register 注册 /api/rulebase/<op> 精确路由 + 本地信封桥（src/host/bridge.ts，v0.1.4）；
+//   rpc.intercept('/api') 不可用（api-gateway 已独占该 channel 唯一 interceptor，二次注册 fail-loud）。
 import { randomUUID } from 'node:crypto'
 import type { MessageId, UserMessage } from '@deepseek-ai/dsh-llm'
 import type { RpcResult } from '@deepseek-ai/dsh-host-apiproxy/api'

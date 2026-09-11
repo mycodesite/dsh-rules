@@ -24,9 +24,11 @@ export interface RuleBaseClientContext {
 }
 
 export function apply(ctx: RuleBaseClientContext): void {
-  // 绑定 channel，把 connection.rpc.call 收敛成 controller 需要的两参面
+  // 绑定 channel，把 connection.rpc.call 收敛成 controller 需要的两参面。
+  // 0.1.5+：宿主已废弃独立前缀 channel，规则端点经共享 /api 精确路由（host 半 fetch.register 六条
+  // /api/rulebase/<op>）承载，endpoint 带 rulebase/ 前缀（详见 docs/api/04）。
   const ruleRpc: RuleRpc = {
-    call: (endpoint, payload) => ctx.connection.rpc.call('/rulebase', endpoint, payload),
+    call: (endpoint, payload) => ctx.connection.rpc.call('/api', `rulebase/${endpoint}`, payload),
   }
   const controller = new RuleController(ruleRpc)
 

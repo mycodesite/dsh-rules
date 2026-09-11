@@ -3,6 +3,26 @@
 本项目的所有显著变更记录于此。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.4] - 2026-09-11
+
+### Fixed
+
+- **重写 RPC 通道注册机制（v0.1.3 的双依赖修复实测无效）**：实机复测证明 `ctx.inject(['connection','webServer'])`
+  在 profile 插件 fiber 上**永不触发**（`webServer` 对插件不可达，cordis 对未就绪服务合法无限期 pending 且
+  静默无报错，`POST /rulebase/list` 仍 405）。v0.1.4 改用 0.1.5 首方范式：
+  `connection.fetch.register` 注册六条 `/api/rulebase/<op>` **精确路由**（内部仅 fetchRoutes.set，
+  零 webServer 触碰，owner.effect 失配自动清理）＋本地信封桥 `src/host/bridge.ts`
+  （宿主 rpcFetchHandler 语义最小复刻：415/400/信封校验/方法比对，handler 抛错折叠为 200 ok:false 信封；
+  零宿主运行时导入）；client 端改 `call('/api', 'rulebase/<op>')`。鉴权经共享 `/api` fence 自动继承。
+- v0.1.3 引入的失败可见化加固（callSafe 折叠/lastError/busy 双保险）实机验证**有效**，原样保留。
+
+### Changed
+
+- `rpc.intercept('/api')` 路线经源码级核实不可用（api-gateway 已独占该 channel 唯一 interceptor，
+  二次注册 fail-loud）；独立前缀 channel `/rulebase` 形态在 0.1.5 插件场景废弃（webServer 可达性不变量）。
+- 测试 21 → 27：新增 `tests/bridge.test.ts`（信封桥六分支）；host 守卫断言改为
+  fetch.register×6 形态（防 `rpc.handle`/`webServer` 依赖回潮）。
+
 ## [0.1.3] - 2026-09-11
 
 ### Fixed

@@ -22,10 +22,24 @@ class RulesService {
 
 #### `dispatch`
 
-`ConnectionRpcHandler` 实例（`(endpoint, payload, signal) => Promise<RpcResult<unknown>>`），随 `ctx.connection.rpc.handle('/rulebase', ...)` 注册。
+`ConnectionRpcHandler` 实例（`(endpoint, payload, signal) => Promise<RpcResult<unknown>>`），经 `connection.fetch.register` 注册为 **`/api` 共享通道上的六条精确路由**（v0.1.4 起，`src/host/index.ts`）：
 
-> **注册时序（插件支持线 dsh ≥0.1.5-rc.1）**：0.1.5 起 `connection` 服务先于 `webServer` 可用（client-connection 启动依赖 `['webServer']`→`['credentials']`），而 `rpc.handle` 内部会立即向 `owner.webServer` 注册物理路由——host 半必须以 `ctx.inject(['connection', 'webServer'], ...)` **双依赖延迟注册**（`src/host/index.ts`），否则 `owner.webServer` 未定义 → TypeError → 通道静默丢失（详见 `.trae/documents/调查报告：dsh升级0.1.5后规则界面加载与保存失败-001`）。
-> **鉴权（0.1.5+）**：per-channel `authority` 选项已废弃；鉴权由传输层统一接管——BrowserAuth（进程 token + `dsh-auth-*` cookie，未认证 401）+ Host/Origin fence（403）。本机 loopback 访问不受影响。
+```ts
+ctx.inject(['connection'], (c) => {
+  for (const op of ['list', 'create', 'save', 'remove', 'reload', 'currentCwd'] as const) {
+    c.connection.fetch.register({
+      path: `/api/rulebase/${op}`,
+      methods: ['POST'],
+      requestBody: 'buffered',
+      fetch: (request) => bridgeRpc(request, op, service.dispatch), // src/host/bridge.ts 本地信封桥
+    })
+  }
+})
+```
+
+> **注册范式（插件支持线 dsh ≥0.1.5-rc.1）与由来**：0.1.5 的架构不变量是 **webServer 仅 client-connection 自身可触碰，/api 层消费者一律经 `connection`**（首方先例：api-session-controller / client-file-upload / ui-deliverables / session-log-export）。`rpc.handle` 内部会立即向 `owner.webServer` 注册物理路由，而 profile 插件 fiber 对 `webServer` **不可达**（cordis inject 对未就绪服务合法无限期 pending、静默无报错）——v0.1.3 的「双依赖延迟注册」因此实测无效（详见调查报告/分析报告-001）。`fetch.register` 内部仅 `fetchRoutes.set`（owner.effect 失配自动清理，插件卸载对称），零 webServer 触碰；`/api` 共享 handler **先查 fetchRoutes 精确表再查 interceptor**，与 api-gateway 无冲突——这也是不能用 `rpc.intercept('/api')` 的原因（每 channel 仅一个 interceptor，api-gateway 已独占，二次注册 fail-loud）。
+> **鉴权**：由传输层统一接管——`/api` 物理路由入口先 `requestRejection`（BrowserAuth 401 + Host/Origin fence 403）再进共享 handler，精确路由自动继承；per-channel `authority` 选项（0.1.1-rc.2）已废弃。
+> **信封桥语义（`src/host/bridge.ts`，宿主 rpcFetchHandler 的本地最小复刻，零宿主运行时导入）**：415（content-type 非 JSON）/ 400（body 非 JSON）/ 信封校验失败与方法不匹配 → 200 信封 `gateway/bad-request`（rpcId echo，缺失回退 `'invalid-request'`）；业务结果（含 `ok:false`）→ 200 信封 `server-response` 透传。**有意差异**：handler 抛错返回 200 ok:false `rulebase/bridge-error` 而非宿主的 HTTP 500——client 对非 2xx 会 throw，200 信封走 `controller.callSafe` 折叠，失败全程可见。信封校验为 `clientRequestSchema` 的最小手工复刻（type/rpcId/method 覆盖一致，rpcId 仅查 string 类型，格式校验裁剪）。
 
 - 按 `endpoint` 分发到 `invoke`；写操作（`create`/`save`/`remove`）成功后调用 `injector.reload()`（`list`/`reload` 除外）。
 - 业务异常折叠进 `RpcResult` 信封（`transportError`，code `'internal'`）；业务值包成 `{ ok: true, value }`。

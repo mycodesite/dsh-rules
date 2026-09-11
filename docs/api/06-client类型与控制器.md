@@ -61,7 +61,7 @@ interface RuleRpc {
 }
 ```
 
-`connection.rpc.call` 的结构切片（channel 已绑定为 `/rulebase`）。
+`connection.rpc.call` 的结构切片（v0.1.4 起 channel 绑定为 `/api`、endpoint 带 `rulebase/` 前缀，经宿主 `/api/rulebase/<op>` 精确路由承载）。
 
 ### 类 `RuleController`
 
