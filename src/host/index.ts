@@ -37,9 +37,11 @@ export function apply(ctx: Context): void {
     })
   })
 
-  // Connection 通用 RPC：UI↔host 的规则文件管理桥（loopback）
-  ctx.inject(['connection'], (c) => {
-    c.connection.rpc.handle('/rulebase', service.dispatch, { authority: 'loopback' })
+  // Connection 通用 RPC：UI↔host 的规则文件管理桥。
+  // 0.1.5+ 时序：connection 服务先于 webServer 可用（client-connection 启动依赖 ['webServer']→['credentials']），
+  // 必须双依赖就绪后再 handle，否则其内部 owner.webServer.register 直接 TypeError，通道注册丢失（详见调查报告-001）。
+  ctx.inject(['connection', 'webServer'], (c) => {
+    c.connection.rpc.handle('/rulebase', service.dispatch)
   })
 
   injector.watch()

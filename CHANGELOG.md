@@ -3,6 +3,31 @@
 本项目的所有显著变更记录于此。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.3] - 2026-09-11
+
+### Fixed
+
+- **dsh 0.1.5 适配：规则设置面板"加载中…/保存中…"永久挂起**。0.1.5 起 client-connection 启动依赖由
+  `['webServer']` 改为 `['credentials']`，`connection` 服务先于 `webServer` 可用；插件 host 半在
+  `ctx.inject(['connection'])` 回调中调用 `rpc.handle()` 时，其内部 `owner.webServer.register` 因
+  `webServer` 未就绪抛 TypeError，`/rulebase` RPC 通道静默丢失（浏览器端 405）。
+  修复：host 半改为 `ctx.inject(['connection', 'webServer'])` **双依赖延迟注册**
+  （`src/host/index.ts`）。
+- **失败可见化（消灭无限转圈）**：client 半 `RuleController` 全部 6 个 RPC 调用点收敛到 `callSafe`
+  出口——传输层异常折叠为 `ok:false`（`code: 'rulebase/transport-error'`），方法**永不 reject**；
+  失败信息写入 `lastError`，`getLastError()` 供 UI 呈现；`load` 失败走既有 error 态，
+  `create/save/remove` 失败经 `window.alert` 提示（删除确认框失败时保留）；
+  `submitEdit`/`doRemove`/`reload` 以 `try/finally` 保证 busy 永复位。
+
+### Changed
+
+- **清理废弃 API**：删除 `rpc.handle` 第三参 `{ authority: 'loopback' }`（0.1.5 两参签名下已废弃，
+  鉴权由传输层 BrowserAuth 401 + Host/Origin fence 403 统一接管）。
+- **宿主版本支持线**：声明 **dsh ≥0.1.5-rc.1**（peer `@deepseek-ai/dsh-client-connection >=0.1.5-rc.1`、
+  devDep 类型基准 `^0.1.5-rc.1`、contract.ts 契约头注、README 三处一致）；0.1.5 以下宿主不在支持范围。
+- **测试**：新增 `tests/controller-rpc.test.ts`（reject 折叠 / getLastError 生命周期 /
+  code 契约 / host 注册守卫），8 → 21 用例全绿；typecheck / build / check-artifact 门禁通过。
+
 ## [0.1.2] - 2026-09-03
 
 ### Fixed

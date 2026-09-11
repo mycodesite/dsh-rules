@@ -76,6 +76,7 @@ class RuleController {
   create(level: RuleLevel, content: string): Promise<boolean>
   save(level: RuleLevel, id: string, content: string): Promise<boolean>
   remove(level: RuleLevel, id: string): Promise<boolean>
+  getLastError(): string | null
 }
 ```
 
@@ -89,15 +90,19 @@ class RuleController {
 
 #### `currentCwd()`
 
-查询当前项目 cwd（调 `currentCwd` 端点）。返回 `Promise<string | null>`：未选定项目时返回 `null`。供「项目规则」保存前校验与项目 tab 的「未选定项目」提示使用。
+查询当前项目 cwd（调 `currentCwd` 端点）。返回 `Promise<string | null>`：未选定项目或传输失败时返回 `null`（按「未选定项目」语义降级）。供「项目规则」保存前校验与项目 tab 的「未选定项目」提示使用。
 
 #### `reload(level)`
 
-先调 `reload` 端点（触发 host 重载注入），再 `load(level)`。
+先调 `reload` 端点（触发 host 重载注入），再 `load(level)`；`reload` 端点失败不中断，由随后 `load` 的 error 态呈现。
 
 #### `create(level, content)` / `save(level, id, content)` / `remove(level, id)`
 
 对应写端点；成功（`res.ok`）后 `load(level)` 刷新列表；返回 `boolean` 表示是否成功。
+
+#### 错误折叠契约（0.1.3+）
+
+全部 6 个方法经私有 `callSafe` 出口调用 RPC，**永不 reject**：传输层异常折叠为 `{ ok: false, error: { code: 'rulebase/transport-error', message } }`（`RpcError.code` 契约必填）；业务失败（`ok:false`）原样透传。失败信息写入 `lastError`，成功即清空；`getLastError()` 供 UI 在操作返回 `false` 时读取呈现（见 07）。背景：0.1.5 浏览器端 `rpc.call` 对非 2xx 直接 throw，无折叠时 UI 将永停 pending（"加载中…/保存中…"）。
 
 ## 设计要点
 

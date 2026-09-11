@@ -64,33 +64,43 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
   const submitEdit = async (): Promise<void> => {
     if (!editing) return
     setBusy(true)
-    if (level === 'project') {
-      const cwd = await controller.currentCwd()
-      if (!cwd) {
-        setBusy(false)
-        window.alert('当前未选定项目，无法保存项目规则。请先选定一个项目（开启一个项目对话）后再试。')
-        return
+    try {
+      if (level === 'project') {
+        const cwd = await controller.currentCwd()
+        if (!cwd) {
+          window.alert('当前未选定项目，无法保存项目规则。请先选定一个项目（开启一个项目对话）后再试。')
+          return
+        }
       }
+      const ok = editing.id === null
+        ? await controller.create(level, editing.content)
+        : await controller.save(level, editing.id, editing.content)
+      if (ok) setEditing(null)
+      else window.alert(controller.getLastError() ?? '操作失败，请查看 dsh 日志')
+    } finally {
+      setBusy(false)
     }
-    const ok = editing.id === null
-      ? await controller.create(level, editing.content)
-      : await controller.save(level, editing.id, editing.content)
-    setBusy(false)
-    if (ok) setEditing(null)
   }
 
   const doRemove = async (): Promise<void> => {
     if (!confirmDeleteId) return
     setBusy(true)
-    await controller.remove(level, confirmDeleteId)
-    setBusy(false)
-    setConfirmDeleteId(null)
+    try {
+      const ok = await controller.remove(level, confirmDeleteId)
+      if (ok) setConfirmDeleteId(null)
+      else window.alert(controller.getLastError() ?? '操作失败，请查看 dsh 日志')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const reload = async (): Promise<void> => {
     setBusy(true)
-    await controller.reload(level)
-    setBusy(false)
+    try {
+      await controller.reload(level)
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (

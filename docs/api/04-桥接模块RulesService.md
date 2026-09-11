@@ -24,6 +24,9 @@ class RulesService {
 
 `ConnectionRpcHandler` 实例（`(endpoint, payload, signal) => Promise<RpcResult<unknown>>`），随 `ctx.connection.rpc.handle('/rulebase', ...)` 注册。
 
+> **注册时序（插件支持线 dsh ≥0.1.5-rc.1）**：0.1.5 起 `connection` 服务先于 `webServer` 可用（client-connection 启动依赖 `['webServer']`→`['credentials']`），而 `rpc.handle` 内部会立即向 `owner.webServer` 注册物理路由——host 半必须以 `ctx.inject(['connection', 'webServer'], ...)` **双依赖延迟注册**（`src/host/index.ts`），否则 `owner.webServer` 未定义 → TypeError → 通道静默丢失（详见 `.trae/documents/调查报告：dsh升级0.1.5后规则界面加载与保存失败-001`）。
+> **鉴权（0.1.5+）**：per-channel `authority` 选项已废弃；鉴权由传输层统一接管——BrowserAuth（进程 token + `dsh-auth-*` cookie，未认证 401）+ Host/Origin fence（403）。本机 loopback 访问不受影响。
+
 - 按 `endpoint` 分发到 `invoke`；写操作（`create`/`save`/`remove`）成功后调用 `injector.reload()`（`list`/`reload` 除外）。
 - 业务异常折叠进 `RpcResult` 信封（`transportError`，code `'internal'`）；业务值包成 `{ ok: true, value }`。
 

@@ -8,9 +8,13 @@
 //
 // 铁律（由 scripts/check-artifact-imports.mjs 在构建期强制，且经 CI 与 npm pack 覆盖）：
 //   本文件及其调用方不得引入 @deepseek-ai/* 的值导入；类型导入允许（编译期擦除）。
-// 契约依据（宿主真包 0.1.1-rc.2，逐行核实）：
+// 契约依据（宿主真包 0.1.5-rc.2，逐行核实 2026-09-11；宿主支持线 dsh ≥0.1.5-rc.1）：
 //   dsh-llm/lib/types/message.js L25-49、call-config.js L54-85、brand.js L17-19
 //   dsh-host-apiproxy/lib/types/api/rpc.js L24-29、rpc.d.ts L173/L181-195
+// 0.1.5 适配补记（详见 .trae/documents/调查报告与解决方案：dsh升级0.1.5后规则界面加载与保存失败-001）：
+//   dsh-client-connection：rpc.handle 两参化（第三参 authority 废弃，鉴权归传输层 BrowserAuth 401 + Host/Origin fence 403）；
+//   connection 服务先于 webServer 可用（client-connection 启动依赖 ['webServer']→['credentials']）——
+//   host 半注册 RPC 通道须 ctx.inject(['connection','webServer']) 双依赖延迟注册（src/host/index.ts）。
 import { randomUUID } from 'node:crypto'
 import type { MessageId, UserMessage } from '@deepseek-ai/dsh-llm'
 import type { RpcResult } from '@deepseek-ai/dsh-host-apiproxy/api'
