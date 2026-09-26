@@ -60,8 +60,7 @@ export class RulesService {
         const level = assertLevel(p.level)
         const id = asString(p.id) ?? ''
         if (!id) throw new Error('缺少规则 id')
-        const cwd = this.resolveCwd(level, asString(p.cwd))
-        if (level === 'project' && !cwd) return undefined
+        const cwd = level === 'project' ? this.requireProjectCwd(asString(p.cwd), '删除') : undefined
         await this.store.remove(level, id, cwd)
         return undefined
       }
@@ -80,10 +79,10 @@ export class RulesService {
     return level === 'project' ? (cwd ?? this.injector.currentProjectCwd()) : undefined
   }
 
-  /** 项目级写操作：解析真实 cwd，无则抛错提示先选定项目（调用方保证 level === 'project'） */
-  private requireProjectCwd(cwd?: string): string {
+  /** 项目级写操作：解析真实 cwd，无则抛错提示先选定项目（调用方保证 level === 'project'）；报错文案按动作名词生成 */
+  private requireProjectCwd(cwd?: string, action = '保存'): string {
     const resolved = cwd ?? this.injector.currentProjectCwd()
-    if (!resolved) throw new Error('当前未选定项目，无法保存项目规则，请先选定一个项目')
+    if (!resolved) throw new Error(`当前未选定项目，无法${action}项目规则，请先选定一个项目`)
     return resolved
   }
 }

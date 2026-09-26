@@ -35,7 +35,8 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot)
   const [level, setLevel] = useState<RuleLevel>('global')
   const [editing, setEditing] = useState<Editing | null>(null)
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  /** 待删除确认的规则快照：删除目标自带归属级别，与当前 tab 解绑 */
+  const [confirmTarget, setConfirmTarget] = useState<Rule | null>(null)
   const [createMenuOpen, setCreateMenuOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   /** 「+ 创建」下拉：点击外部关闭（与行设置菜单共用 useClickOutside） */
@@ -49,6 +50,7 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
     } else {
       setProjectCwd(null)
     }
+    setConfirmTarget(null) // 切 tab 清除跨 tab 残留的删除确认
     void controller.load(level)
   }, [controller, level])
 
@@ -83,11 +85,11 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
   }
 
   const doRemove = async (): Promise<void> => {
-    if (!confirmDeleteId) return
+    if (!confirmTarget) return
     setBusy(true)
     try {
-      const ok = await controller.remove(level, confirmDeleteId)
-      if (ok) setConfirmDeleteId(null)
+      const ok = await controller.remove(confirmTarget.level, confirmTarget.id)
+      if (ok) setConfirmTarget(null)
       else window.alert(controller.getLastError() ?? '操作失败，请查看 dsh 日志')
     } finally {
       setBusy(false)
@@ -164,7 +166,7 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
               key={rule.id}
               rule={rule}
               onEdit={() => beginEdit(rule)}
-              onDelete={() => setConfirmDeleteId(rule.id)}
+              onDelete={() => setConfirmTarget(rule)}
             />
           ))}
         </ul>
@@ -188,11 +190,11 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
         </div>
       )}
 
-      {confirmDeleteId && (
+      {confirmTarget && (
         <div style={styles.editor}>
-          <p style={styles.intro}>确定删除该规则？</p>
+          <p style={styles.intro}>确定删除{LABELS[confirmTarget.level]}规则「{confirmTarget.title}」？</p>
           <div style={styles.editorActions}>
-            <button type="button" style={styles.ghostButton} onClick={() => setConfirmDeleteId(null)} disabled={busy}>取消</button>
+            <button type="button" style={styles.ghostButton} onClick={() => setConfirmTarget(null)} disabled={busy}>取消</button>
             <button type="button" style={styles.dangerButton} onClick={() => void doRemove()} disabled={busy}>
               {busy ? '删除中…' : '删除'}
             </button>

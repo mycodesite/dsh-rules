@@ -52,7 +52,7 @@ ctx.inject(['connection'], (c) => {
 | `list` | `{ level, cwd? }` | `Rule[]` | 列某级规则 |
 | `create` | `{ level, content }` | `Rule` | 新建规则（host 生成 id） |
 | `save` | `{ level, id, content }` | `Rule` | 保存（新建或覆盖） |
-| `remove` | `{ level, id }` | `void` | 删除 |
+| `remove` | `{ level, id }` | `void` | 删除；仅目标文件不存在（ENOENT）幂等返回，其余错误以 200 ok:false 错误信封返回（同 save 失败路径） |
 | `reload` | — | `{ count: number }` | 显式重载并刷新注入（`count` 为全局规则数） |
 
 > **信封约定**：上表「业务返回值」为 `RpcResult` 信封内的 `value`。client 端 `rpc.call` 得到 `{ ok: true, value }` 或 `{ ok: false, error: { code, message, details } }`，须先判 `ok` 再取 `.value`。
@@ -69,4 +69,4 @@ ctx.inject(['connection'], (c) => {
 
 - `RulesService` 是普通对象，无需 Cordis Service 或 `@Remote` 标记（Connection RPC 与 Typert Remote 无关）。
 - 端点只承载对 md 文件的增删改查，不承载规则的「dsh 注册」——规则内容自始至终只在磁盘文件。
-- **cwd 解析（`resolveCwd`/`requireProjectCwd`）**：项目级读写以「client 传入 cwd 优先，缺省用 `injector.currentProjectCwd()`」解析真实项目路径；`create`/`save` 在项目级无有效 cwd 时抛「未选定项目」错误；`list` 无 cwd 返回 `[]`；`remove` 无 cwd 幂等跳过。
+- **cwd 解析（`resolveCwd`/`requireProjectCwd`）**：项目级读写以「client 传入 cwd 优先，缺省用 `injector.currentProjectCwd()`」解析真实项目路径；`create`/`save`/`remove` 在项目级无有效 cwd 时抛「未选定项目」错误（`requireProjectCwd` 报错文案按动作名词参数生成：保存/删除）；`list` 无 cwd 返回 `[]`。

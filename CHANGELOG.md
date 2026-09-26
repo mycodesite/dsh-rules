@@ -3,6 +3,31 @@
 本项目的所有显著变更记录于此。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.5] - 2026-09-27
+
+### Fixed
+
+- **设置面板「规则」列表项删除无效（根因一：删除目标与操作上下文解绑）**：确认框原只存裸 id，确认期间
+  切换「全局/项目」tab 后以当前 tab 级别 + 旧 id 发请求——目标不存在时 ENOENT 被吞伪装成功（原规则纹丝不动），
+  两级同名 id 时还会误删另一级别的规则。现升级为 `confirmTarget`（`Rule` 快照，含 `level`/`id`/`title`）：
+  删除请求恒携带被删规则归属级别，切 tab 清除残留确认，确认框显示待删规则级别与标题
+  （`src/client/RuleSection.tsx`）。
+- **设置面板删除假成功（根因二：`store.remove` 吞掉全部 `fs.rm` 错误）**：文件被占用（EBUSY/EPERM）、
+  权限不足等真实失败同样返回"成功"。现仅「文件不存在」（ENOENT）幂等返回，其余错误向上抛，经
+  `service.dispatch` 的 `transportError` 通道以 200 ok:false 信封返回、UI alert 可见（同 save 失败路径）
+  （`src/host/store.ts`）。
+- **project 级 remove 无 cwd 静默假成功**：与 create/save 语义对齐，改经 `requireProjectCwd` 显式抛错；
+  报错文案按动作名词参数生成（删除场景「无法删除项目规则」），create/save 调用点零改动
+  （`src/host/service.ts`）。
+
+### Changed
+
+- 测试 27 → 33：新增 `tests/host-remove.test.ts`（store.remove 幂等保留 / 真实删除 / EBUSY 上抛 /
+  dispatch 失败通道 / project 无 cwd 删除文案）与 `tests/controller-rpc.test.ts` remove payload
+  精确透传断言（`{ level, id }`）。
+- 文档连动：`docs/api/04`（remove 幂等边界 + cwd 语义句「project 无 cwd 抛错（同 create/save）」）、
+  `docs/api/07`（`confirmTarget` 状态与删除确认交互描述）。
+
 ## [0.1.4] - 2026-09-11
 
 ### Fixed

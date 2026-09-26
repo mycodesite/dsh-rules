@@ -94,6 +94,18 @@ test('create/save/remove：失败返回 false 且 getLastError 非空；成功�
   assert.equal(controller.getLastError(), null)
 })
 
+test('remove：payload 精确透传 { level, id }（删除目标绑定归属级别，E1 缺口补口）', async () => {
+  let seen: { endpoint: string; payload: unknown } | null = null
+  const rpc = makeRpc(async (endpoint, payload) => {
+    if (endpoint === 'remove') seen = { endpoint, payload }
+    if (endpoint === 'list') return okResult([])
+    return okResult(undefined)
+  })
+  const controller = new RuleController(rpc)
+  assert.equal(await controller.remove('project', 'A'), true)
+  assert.deepEqual(seen, { endpoint: 'remove', payload: { level: 'project', id: 'A' } })
+})
+
 test('currentCwd：传输失败返回 null（按"未选定项目"降级，不抛出）', async () => {
   const rpc = makeRpc(async () => { throw new Error('HTTP 405') })
   const controller = new RuleController(rpc)

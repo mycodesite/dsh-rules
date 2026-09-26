@@ -97,14 +97,15 @@ export class RuleStore {
     return { id, title: titleOf(id, normalized), content: normalized, level, filePath }
   }
 
-  /** 删除某级规则（不存在则幂等） */
+  /** 删除某级规则；仅「文件不存在」幂等，其余错误向上抛（防静默假成功） */
   async remove(level: RuleLevel, id: string, cwd?: string): Promise<void> {
     const dir = this.dirOf(level, cwd)
     if (!dir) return
     try {
       await fs.rm(path.join(dir, `${id}.md`))
-    } catch {
-      // 不存在 → 幂等
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') return // 不存在 → 幂等
+      throw e // 真实失败（EBUSY/EPERM/权限等）向上传播，禁止伪装成功
     }
   }
 }
