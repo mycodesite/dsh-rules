@@ -18,8 +18,11 @@ export class RuleController {
   private readonly listeners = new Set<Listener>()
 
   private readonly rpc: RuleRpc
-  constructor(rpc: RuleRpc) {
+  /** 可选：前端解析当前对话 cwd（仅 project 级 RPC 携带）；未注入时 payload 形状不变（向后兼容） */
+  private readonly resolveCwd?: () => string | undefined
+  constructor(rpc: RuleRpc, resolveCwd?: () => string | undefined) {
     this.rpc = rpc
+    this.resolveCwd = resolveCwd
   }
 
   getSnapshot = (): RuleListState => this.state
@@ -49,15 +52,23 @@ export class RuleController {
     return this.lastError
   }
 
+  /** cwd 仅 project 级且非空时携带（level 感知）；global 级恒不带，host 对 global 从不消费 cwd */
+  private cwdPayload(level: RuleLevel): { cwd?: string } {
+    const cwd = level === 'project' ? this.resolveCwd?.() : undefined
+    return cwd ? { cwd } : {}
+  }
+
   async load(level: RuleLevel): Promise<void> {
     this.setState({ status: 'loading' })
-    const res = await this.callSafe('list', { level })
+    const res = await this.callSafe('list', { level, ...this.cwdPayload(level) })
     if (res.ok) this.setState({ status: 'ready', rows: res.value as Rule[] })
     else this.setState({ status: 'error', error: res.error.message })
   }
 
-  /** 当前项目 cwd；未选定项目时返回 null（含传输层失败，按"未选定"降级） */
+  /** 当前项目 cwd；本地（当前对话 session.cwd）优先，无值才走 RPC（host 端点作回退）；未选定项目时返回 null */
   async currentCwd(): Promise<string | null> {
+    const local = this.resolveCwd?.()
+    if (local) return local
     const res = await this.callSafe('currentCwd', {})
     if (!res.ok) return null
     const value = res.value as { cwd: string | null } | undefined
@@ -70,19 +81,19 @@ export class RuleController {
   }
 
   async create(level: RuleLevel, content: string): Promise<boolean> {
-    const res = await this.callSafe('create', { level, content })
+    const res = await this.callSafe('create', { level, content, ...this.cwdPayload(level) })
     if (res.ok) await this.load(level)
     return res.ok
   }
 
   async save(level: RuleLevel, id: string, content: string): Promise<boolean> {
-    const res = await this.callSafe('save', { level, id, content })
+    const res = await this.callSafe('save', { level, id, content, ...this.cwdPayload(level) })
     if (res.ok) await this.load(level)
     return res.ok
   }
 
   async remove(level: RuleLevel, id: string): Promise<boolean> {
-    const res = await this.callSafe('remove', { level, id })
+    const res = await this.callSafe('remove', { level, id, ...this.cwdPayload(level) })
     if (res.ok) await this.load(level)
     return res.ok
   }

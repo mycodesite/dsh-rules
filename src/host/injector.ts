@@ -86,14 +86,20 @@ export class RuleInjector {
     return undefined
   }
 
-  /** 变更收敛：异步重算缓存 + 显式 agent.inject（不唤醒驱动） */
+  /** 变更收敛：异步重算缓存 + 显式 agent.inject（不唤醒驱动）；新旧合成文本一致则跳过注入 */
   async reload(): Promise<void> {
     if (this.reloadPending) return
     this.reloadPending = true
     try {
+      const old = new Map(this.cache) // 重算前快照（value 为不可变字符串，浅拷贝安全）
       const global = await this.store.list('global') // 全局只读一次
       await this.renderToCache(global)
       for (const cwd of this.knownCwds) await this.renderToCache(global, cwd) // 仅读项目，复用全局
+      // 逐 key 对比新旧合成文本；无变化只刷缓存，跳过注入（根治 touch/临时文件/双通道重复的无效注入）。
+      // key 缺失（首次建缓存/启动竞态）视为有变化，保守注入防漏提醒；cache keys 单调增（knownCwds 无删除路径），
+      // 旧快照 keys ⊆ 新 keys 恒成立，遍历新 keys 即全量对比。若未来 knownCwds 支持删除，须改为并集遍历。
+      const changed = [...this.cache].some(([key, text]) => text !== old.get(key))
+      if (!changed) return // finally 复位 reloadPending，提前返回安全
       for (const agent of this.activeAgents.keys()) {
         try {
           agent.inject(createUserMessage({

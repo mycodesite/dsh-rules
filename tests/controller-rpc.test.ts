@@ -113,6 +113,79 @@ test('currentCwd：传输失败返回 null（按"未选定项目"降级，不抛
   assert.equal(controller.getLastError(), 'HTTP 405')
 })
 
+// ===== 任务001（方案 C+A）增补：cwd 透传 / level 感知 / 本地优先 / 回退 =====
+// 对应《解决方案：设置面板项目规则跟随对话切换-001》§7.2-A 用例 1-5。
+
+test('load：resolveCwd 有值时 project 级 payload 携带 cwd（§7.2-A 用例1）', async () => {
+  let seen: { endpoint: string; payload: unknown } | null = null
+  const rpc = makeRpc(async (endpoint, payload) => {
+    if (endpoint === 'list') seen = { endpoint, payload }
+    return okResult([])
+  })
+  const controller = new RuleController(rpc, () => '/proj/A')
+  await controller.load('project')
+  assert.deepEqual(seen, { endpoint: 'list', payload: { level: 'project', cwd: '/proj/A' } })
+})
+
+test('load：resolveCwd 有值但 level=global 时 payload 不带 cwd（§7.2-A 用例2）', async () => {
+  let seen: { endpoint: string; payload: unknown } | null = null
+  const rpc = makeRpc(async (endpoint, payload) => {
+    if (endpoint === 'list') seen = { endpoint, payload }
+    return okResult([])
+  })
+  const controller = new RuleController(rpc, () => '/proj/A')
+  await controller.load('global')
+  assert.deepEqual(seen, { endpoint: 'list', payload: { level: 'global' } })
+})
+
+test('currentCwd：resolveCwd 有值时本地优先返回，不发 RPC（§7.2-A 用例3）', async () => {
+  const seen: string[] = []
+  const rpc = makeRpc(async (endpoint) => {
+    seen.push(endpoint)
+    return okResult({ cwd: '/host-side' })
+  })
+  const controller = new RuleController(rpc, () => '/local-side')
+  assert.equal(await controller.currentCwd(), '/local-side')
+  assert.deepEqual(seen, [], '本地命中时不应发出任何 RPC')
+})
+
+test('currentCwd：resolveCwd 返回 undefined 时回退 RPC 端点，payload 形状不变（§7.2-A 用例4）', async () => {
+  let seen: { endpoint: string; payload: unknown } | null = null
+  const rpc = makeRpc(async (endpoint, payload) => {
+    seen = { endpoint, payload }
+    return okResult({ cwd: '/host' })
+  })
+  const controller = new RuleController(rpc, () => undefined)
+  assert.equal(await controller.currentCwd(), '/host')
+  assert.deepEqual(seen, { endpoint: 'currentCwd', payload: {} })
+})
+
+test('create/save/remove：project 级 payload 带 cwd，global 级不带（§7.2-A 用例5，level 感知回归）', async () => {
+  const seen: Array<{ endpoint: string; payload: Record<string, unknown> }> = []
+  const rpc = makeRpc(async (endpoint, payload) => {
+    if (endpoint !== 'list') seen.push({ endpoint, payload: payload as Record<string, unknown> })
+    return okResult(undefined)
+  })
+  const controller = new RuleController(rpc, () => '/proj/A')
+  assert.equal(await controller.create('project', '# A'), true)
+  assert.equal(await controller.save('project', 'A', '# A\n改'), true)
+  assert.equal(await controller.remove('project', 'A'), true)
+  assert.deepEqual(seen, [
+    { endpoint: 'create', payload: { level: 'project', content: '# A', cwd: '/proj/A' } },
+    { endpoint: 'save', payload: { level: 'project', id: 'A', content: '# A\n改', cwd: '/proj/A' } },
+    { endpoint: 'remove', payload: { level: 'project', id: 'A', cwd: '/proj/A' } },
+  ])
+  seen.length = 0
+  assert.equal(await controller.create('global', '# G'), true)
+  assert.equal(await controller.save('global', 'G', '# G\n改'), true)
+  assert.equal(await controller.remove('global', 'G'), true)
+  assert.deepEqual(seen, [
+    { endpoint: 'create', payload: { level: 'global', content: '# G' } },
+    { endpoint: 'save', payload: { level: 'global', id: 'G', content: '# G\n改' } },
+    { endpoint: 'remove', payload: { level: 'global', id: 'G' } },
+  ])
+})
+
 test('host apply：RPC 通道注册使用双依赖注入且无废弃第三参（守卫回归）', () => {
   const src = readFileSync(new URL('../src/host/index.ts', import.meta.url), 'utf8')
   assert.match(src, /ctx\.inject\(\['connection'\]/)

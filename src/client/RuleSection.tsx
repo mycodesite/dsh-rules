@@ -2,10 +2,12 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { CSSProperties, JSX, MouseEvent as ReactMouseEvent, RefObject } from 'react'
 import type { RuleController } from './controller.ts'
+import type { SessionsListProvider } from './index.ts'
 import type { Rule, RuleLevel } from './types.ts'
 
 export interface RuleSectionProps {
   controller: RuleController
+  sessionsList: SessionsListProvider
 }
 
 const LEVELS: readonly RuleLevel[] = ['global', 'project']
@@ -31,7 +33,7 @@ interface Editing {
   content: string
 }
 
-export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
+export function RuleSection({ controller, sessionsList }: RuleSectionProps): JSX.Element {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot)
   const [level, setLevel] = useState<RuleLevel>('global')
   const [editing, setEditing] = useState<Editing | null>(null)
@@ -43,6 +45,11 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
   const createWrapRef = useClickOutside<HTMLDivElement>(createMenuOpen, () => setCreateMenuOpen(false))
   /** 当前项目 cwd；null = 未选定项目（仅项目 tab 有意义） */
   const [projectCwd, setProjectCwd] = useState<string | null>(null)
+  /** 当前选中 session id（切换对话即变）：纳入依赖触发 currentCwd/load 重拉 */
+  const currentSessionId = useSyncExternalStore(
+    sessionsList.subscribe,
+    () => sessionsList.getSnapshot().current,
+  )
 
   useEffect(() => {
     if (level === 'project') {
@@ -52,7 +59,7 @@ export function RuleSection({ controller }: RuleSectionProps): JSX.Element {
     }
     setConfirmTarget(null) // 切 tab 清除跨 tab 残留的删除确认
     void controller.load(level)
-  }, [controller, level])
+  }, [controller, level, currentSessionId])
 
   const rows = state.status === 'ready' ? state.rows : []
 

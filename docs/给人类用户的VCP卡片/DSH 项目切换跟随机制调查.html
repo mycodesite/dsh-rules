@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DSH 项目切换跟随机制调查</title>
+</head>
+<body style="margin:0;">
+<div id="vcp-msg-13" style="background: rgb(240, 237, 229); color: rgb(45, 49, 66); font-family: Geist, &quot;Microsoft YaHei&quot;, sans-serif !important; font-size: 14px; padding: 28px 24px; box-sizing: border-box; max-width: 920px; overflow-wrap: break-word;" data-vcp-font-done="true" data-vcp-math-done="true" data-vcp-bg-done="true">
+<style data-plugin="vcp-message">
+#vcp-msg-13 .eyebrow{font-family:'Geist Mono',Consolas,monospace!important;font-size:10px!important;text-transform:uppercase;letter-spacing:0.14em!important;color:#7a8399!important;}
+#vcp-msg-13 h1{font-family:'Instrument Serif','Noto Serif SC',serif!important;font-size:26px!important;font-weight:600!important;margin:2px 0 0;letter-spacing:0.01em!important;color:#2d3142!important;}
+#vcp-msg-13 .sub{font-family:'Instrument Serif','Noto Serif SC',serif!important;font-style:italic!important;color:#4f5d75!important;font-size:13px!important;margin:6px 0 16px;}
+#vcp-msg-13 .plate{background:#f5f5f5;border:1px solid rgba(45,49,66,0.12);border-radius:8px;padding:14px 16px;margin-bottom:14px;}
+#vcp-msg-13 .phead{font-family:'Geist Mono',Consolas,monospace!important;font-size:9px!important;text-transform:uppercase;letter-spacing:0.14em!important;color:#7a8399!important;margin-bottom:8px;}
+#vcp-msg-13 table{width:100%;border-collapse:collapse;font-size:12px!important;}
+#vcp-msg-13 th{text-align:left!important;font-family:'Geist Mono',Consolas,monospace!important;font-size:8.5px!important;text-transform:uppercase;letter-spacing:0.1em!important;color:#7a8399!important;padding:5px 6px;border-bottom:1px solid rgba(45,49,66,0.18);}
+#vcp-msg-13 td{padding:6px;border-bottom:1px solid rgba(45,49,66,0.07);color:#2d3142!important;vertical-align:top;line-height:1.5!important;}
+#vcp-msg-13 td.path{font-family:'Geist Mono',Consolas,monospace!important;font-size:10.5px!important;color:#2e5aa8!important;}
+#vcp-msg-13 td.by{font-family:'Geist Mono',Consolas,monospace!important;font-size:10.5px!important;color:#4f5d75!important;}
+#vcp-msg-13 .pt{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(45,49,66,0.06);}
+#vcp-msg-13 .pt:last-child{border-bottom:none;}
+#vcp-msg-13 .pt b{flex:0 0 22px;font-family:'Instrument Serif','Noto Serif SC',serif!important;font-size:20px!important;color:#eb6c36!important;font-weight:600!important;line-height:1.1!important;}
+#vcp-msg-13 .pt div{flex:1;color:#2d3142!important;font-size:12.5px!important;line-height:1.55!important;}
+#vcp-msg-13 .pt div code{font-family:'Geist Mono',Consolas,monospace!important;font-size:10.5px!important;background:rgba(46,90,168,0.08);padding:1px 4px;border-radius:3px;color:#2e5aa8!important;}
+#vcp-msg-13 svg{display:block;}
+#vcp-msg-13 .legend{display:flex;gap:18px;font-family:'Geist Mono',Consolas,monospace!important;font-size:8.5px!important;text-transform:uppercase;letter-spacing:0.1em!important;color:#7a8399!important;margin-top:8px;}
+#vcp-msg-13 .legend span{display:flex;align-items:center;gap:5px;}
+#vcp-msg-13 .legend i{display:inline-block;width:16px;height:2px;}
+#vcp-msg-13 .warn{background:rgba(235,108,54,0.08);border-left:3px solid #eb6c36;border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:14px;font-size:12.5px!important;color:#2d3142!important;line-height:1.6!important;}
+#vcp-msg-13 .warn strong{color:#eb6c36!important;}
+#vcp-msg-13 .colophon{font-family:'Geist Mono',Consolas,monospace!important;font-size:9px!important;text-transform:uppercase;letter-spacing:0.16em!important;color:#7a8399!important;border-top:1px solid rgba(45,49,66,0.18);padding-top:8px;display:flex;justify-content:space-between;}
+  /* v6.33 渲染器注入：字体链兜底（根容器锁定 + 未声明字体元素继承）*/
+  #vcp-msg-13{font-family:ui-sans-serif,system-ui,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif !important}
+  #vcp-msg-13 div{font-family:inherit !important}
+  #vcp-msg-13 p{font-family:inherit !important}
+  #vcp-msg-13 span{font-family:inherit !important}
+  #vcp-msg-13 h1{font-family:inherit !important}
+  #vcp-msg-13 h2{font-family:inherit !important}
+  #vcp-msg-13 h3{font-family:inherit !important}
+  #vcp-msg-13 h4{font-family:inherit !important}
+  #vcp-msg-13 h5{font-family:inherit !important}
+  #vcp-msg-13 h6{font-family:inherit !important}
+  #vcp-msg-13 li{font-family:inherit !important}
+  #vcp-msg-13 td{font-family:inherit !important}
+  #vcp-msg-13 th{font-family:inherit !important}
+  #vcp-msg-13 a{font-family:inherit !important}
+  #vcp-msg-13 strong{font-family:inherit !important}
+  #vcp-msg-13 b{font-family:inherit !important}
+  #vcp-msg-13 em{font-family:inherit !important}
+  #vcp-msg-13 i{font-family:inherit !important}
+  #vcp-msg-13 blockquote{font-family:inherit !important}
+  #vcp-msg-13 pre{font-family:inherit !important}
+  #vcp-msg-13 code{font-family:inherit !important}
+  #vcp-msg-13 small{font-family:inherit !important}
+  #vcp-msg-13 label{font-family:inherit !important}
+  #vcp-msg-13 figcaption{font-family:inherit !important}
+  #vcp-msg-13 summary{font-family:inherit !important}
+  #vcp-msg-13 button{font-family:inherit !important}
+  </style>
+<div class="eyebrow" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">TASK 001 · COMPLETE · 向 YG 报告</div>
+<h1 style="font-style: inherit !important; line-height: inherit !important;">DSH 项目切换跟随机制调查</h1>
+<div class="sub" style="font-weight: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">cwd 驱动的会话级上下文绑定 —— 对话即 session，项目即 workspace，经 path 绑定跟随。</div>
+<div class="plate" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">
+<div class="phead" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">交付物 Deliverables</div>
+<table style="display: block; width: 100%; max-width: 100%; overflow-x: auto;">
+<tbody><tr><th style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">类型</th><th style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">路径</th><th style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">字节</th><th style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">状态</th></tr>
+<tr><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">技术资料（入库）</td><td class="path" style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">.tmp\任务001-技术资料-DSH项目切换跟随机制.md</td><td class="by" style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">22,066</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">kb_ingest 入库成功 · 新增 1 文档 / 28 块 / 28 向量 / 失败 0</td></tr>
+<tr><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">调查报告（落盘）</td><td class="path" style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">.trae\documents\调查报告：DSH项目切换跟随机制-001.md</td><td class="by" style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">22,455</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">已落盘 .trae/documents</td></tr>
+</tbody></table>
+</div>
+<div class="plate" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">
+<div class="phead" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">核心结论 Core Finding · 根据当前对话的项目切换方法</div>
+<div class="pt" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">1</b><div style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">DSH 的"项目切换跟随"本质是 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">cwd</code> 驱动的会话级上下文绑定，不是独立切换引擎。对话 = session，项目 = workspace，两者通过 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">realpath(session.cwd) === workspace.path</code> 绑定。</div></div>
+<div class="pt" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">2</b><div style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">切换对话 = 切换 session：前端 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">selectWorkspace → openWorkspace → connectWorkspace → sessions.create({workspaceId}) → openSession</code>，session 创建时 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">cwd = workspace.path</code> 写入不可变的 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">header.cwd</code>。</div></div>
+<div class="pt" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">3</b><div style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">跟随靠 cwd：所有能力在 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">agent/pre-step</code> 按 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">session.header.cwd</code> 重新加载——agent-instructions 加载 AGENTS.md/CLAUDE.md、文件/shell 工具按 cwd 解析、sandbox 按 cwd 设边界、skill 按 cwd 选 roots（缓存键含 cwd 变更即失效）、系统提示 cwd 变量取自 header.cwd。</div></div>
+<div class="pt" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">4</b><div style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">cwd 不可变：切换项目必走新建/打开另一个 session（<code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">ApiSessionCwdConflict</code> 阻止原地改 cwd），而非在原对话上改 cwd。</div></div>
+<div class="pt" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">5</b><div style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">两套 scope 须区分：① DSH 源码内置（agent-instructions 加载 AGENTS.md/CLAUDE.md，skill ScopeKey 是 agent preset 维度）；② 插件层（rulebase 的 .dsh/rules、connector/kb/memory 的 scope=project 按 workspaceId 隔离），两者经 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">cwd === workspace.path</code> 数据对齐。</div></div>
+</div>
+<div class="plate" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">
+<div class="phead" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">切换链路 Flow · 对话切换 → 项目跟随</div>
+<svg width="760" height="214" viewBox="0 0 760 214" role="img" aria-label="DSH项目切换跟随链路" style="display: block; max-width: 100%;">
+<title>DSH 项目切换跟随链路</title>
+<desc>从 selectWorkspace 到各能力跟随 cwd 的完整链路</desc>
+<defs>
+<marker id="t1coral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#eb6c36"></path></marker>
+<marker id="t1link" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2e5aa8"></path></marker>
+</defs>
+<rect x="14" y="14" width="120" height="32" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"></rect>
+<text x="74" y="34" text-anchor="middle" fill="#2d3142" font-size="11" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">selectWorkspace</text>
+<rect x="158" y="14" width="120" height="32" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"></rect>
+<text x="218" y="34" text-anchor="middle" fill="#2d3142" font-size="11" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">openWorkspace</text>
+<rect x="302" y="14" width="120" height="32" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"></rect>
+<text x="362" y="34" text-anchor="middle" fill="#2d3142" font-size="11" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">connectWorkspace</text>
+<rect x="446" y="14" width="120" height="32" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"></rect>
+<text x="506" y="34" text-anchor="middle" fill="#2d3142" font-size="11" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">sessions.create</text>
+<rect x="590" y="14" width="120" height="32" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"></rect>
+<text x="650" y="34" text-anchor="middle" fill="#2d3142" font-size="11" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">openSession</text>
+<line x1="134" y1="30" x2="155" y2="30" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#t1coral)"></line>
+<line x1="278" y1="30" x2="299" y2="30" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#t1coral)"></line>
+<line x1="422" y1="30" x2="443" y2="30" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#t1coral)"></line>
+<line x1="566" y1="30" x2="587" y2="30" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#t1coral)"></line>
+<rect x="260" y="78" width="240" height="34" rx="6" fill="#f5f5f5" stroke="#2e5aa8" stroke-width="1.4"></rect>
+<text x="380" y="93" text-anchor="middle" fill="#2d3142" font-size="11.5" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">cwd = workspace.path</text>
+<text x="380" y="105" text-anchor="middle" fill="#7a8399" font-size="8.5" font-family="Geist Mono,Consolas,monospace">写入 header.cwd · 不可变</text>
+<path d="M650,46 L650,62 L380,62 L380,76" fill="none" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#t1coral)"></path>
+<path d="M380,112 L380,128 M84,128 L676,128" fill="none" stroke="#2e5aa8" stroke-width="1.2"></path>
+<rect x="14" y="146" width="140" height="34" rx="6" fill="#f5f5f5" stroke="#2e5aa8" stroke-width="1"></rect>
+<text x="84" y="161" text-anchor="middle" fill="#2d3142" font-size="10.5" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">agent-instructions</text>
+<text x="84" y="173" text-anchor="middle" fill="#7a8399" font-size="7.5" font-family="Geist Mono,Consolas,monospace">AGENTS.md · CLAUDE.md</text>
+<rect x="162" y="146" width="140" height="34" rx="6" fill="#f5f5f5" stroke="#2e5aa8" stroke-width="1"></rect>
+<text x="232" y="161" text-anchor="middle" fill="#2d3142" font-size="10.5" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">文件 / shell 工具</text>
+<text x="232" y="173" text-anchor="middle" fill="#7a8399" font-size="7.5" font-family="Geist Mono,Consolas,monospace">按 session.cwd</text>
+<rect x="310" y="146" width="140" height="34" rx="6" fill="#f5f5f5" stroke="#2e5aa8" stroke-width="1"></rect>
+<text x="380" y="161" text-anchor="middle" fill="#2d3142" font-size="10.5" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">sandbox 边界</text>
+<text x="380" y="173" text-anchor="middle" fill="#7a8399" font-size="7.5" font-family="Geist Mono,Consolas,monospace">boundary = cwd</text>
+<rect x="458" y="146" width="140" height="34" rx="6" fill="#f5f5f5" stroke="#2e5aa8" stroke-width="1"></rect>
+<text x="528" y="161" text-anchor="middle" fill="#2d3142" font-size="10.5" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">skill 发现</text>
+<text x="528" y="173" text-anchor="middle" fill="#7a8399" font-size="7.5" font-family="Geist Mono,Consolas,monospace">cwd 失效缓存</text>
+<rect x="606" y="146" width="140" height="34" rx="6" fill="#f5f5f5" stroke="#2e5aa8" stroke-width="1"></rect>
+<text x="676" y="161" text-anchor="middle" fill="#2d3142" font-size="10.5" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">系统提示</text>
+<text x="676" y="173" text-anchor="middle" fill="#7a8399" font-size="7.5" font-family="Geist Mono,Consolas,monospace">cwd 变量</text>
+<path d="M84,128 L84,144" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#t1link)"></path>
+<path d="M232,128 L232,144" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#t1link)"></path>
+<path d="M380,128 L380,144" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#t1link)"></path>
+<path d="M528,128 L528,144" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#t1link)"></path>
+<path d="M676,128 L676,144" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#t1link)"></path>
+</svg>
+<div class="legend" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;"><span style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><i style="background: rgb(235, 108, 54); font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"></i>主流程</span><span style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><i style="background: rgb(46, 90, 168); font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"></i>cwd 跟随分发</span><span style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">切换项目必走新 session（cwd 不可变）</span></div>
+</div>
+<div class="plate" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">
+<div class="phead" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">调查分工 Division · 四子代理互补</div>
+<table style="display: block; width: 100%; max-width: 100%; overflow-x: auto;">
+<tbody><tr><th style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">子代理</th><th style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">范围</th><th style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">贡献</th></tr>
+<tr><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">A</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">教程文档 docs（15 篇）</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">负向证据：project/workspace 切换关键词零匹配；贡献 Cordis 通用机制清单（profile / HMR / 依赖装卸 / session-event）</td></tr>
+<tr><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">B</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">知识库 .kb（15 文档 / 217 块）</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">Cordis 底层理论（isolate / 插件组 / 配置树增量协调 / 会话事件）+ allMemory 工作记忆与 CWD 绑定行为线索</td></tr>
+<tr><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">C</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">DSH 源码（17 关键文件）</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">核心：cwd 驱动完整链路 + 13 条带行号发现 + 4 条调用链 + 8 种途径清单</td></tr>
+<tr><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">D</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">汇总</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">综合三份调查 + 技术资料入库 .kb + 调查报告落盘</td></tr>
+</tbody></table>
+</div>
+<div class="warn" style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">
+<strong style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">边界提示 ·</strong> DSH 源码内置的 agent-instructions（加载 AGENTS.md/CLAUDE.md）与插件层 rulebase（.dsh/rules 加载）、connector/kb/memory 的 scope=project（按 workspaceId 隔离）是<strong style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">两套机制</strong>，后者源码不在 DSH 源码仓库，需后续查各插件源码补全跟随链路。当前项目（dsh-rules）需打开新对话发消息才切换，正是因 rulebase 插件层的规则库未随对话 cwd 自动跟随——机制路径已定位，补全待插件源码调查。
+</div>
+<div class="colophon" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;"><span style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">SOURCES 17 · CORAL 2 · DELIVERED 2</span><span style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">RULE ARCHIVED ✓</span></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>规则库更新注入机制</title>
+</head>
+<body style="margin:0;">
+<div id="vcp-msg-17" style="background: rgb(240, 237, 229); color: rgb(45, 49, 66); font-family: Geist, &quot;Microsoft YaHei&quot;, sans-serif !important; font-size: 14px; padding: 28px 24px; box-sizing: border-box; max-width: 920px; overflow-wrap: break-word;" data-vcp-font-done="true" data-vcp-math-done="true" data-vcp-bg-done="true">
+<style data-plugin="vcp-message">
+#vcp-msg-17 .eyebrow{font-family:'Geist Mono',Consolas,monospace!important;font-size:10px!important;text-transform:uppercase;letter-spacing:0.14em!important;color:#7a8399!important;}
+#vcp-msg-17 h1{font-family:'Instrument Serif','Noto Serif SC',serif!important;font-size:25px!important;font-weight:600!important;margin:2px 0 0;letter-spacing:0.01em!important;color:#2d3142!important;}
+#vcp-msg-17 .sub{font-family:'Instrument Serif','Noto Serif SC',serif!important;font-style:italic!important;color:#4f5d75!important;font-size:13px!important;margin:6px 0 16px;}
+#vcp-msg-17 .plate{background:#f5f5f5;border:1px solid rgba(45,49,66,0.12);border-radius:8px;padding:14px 16px;margin-bottom:14px;}
+#vcp-msg-17 .phead{font-family:'Geist Mono',Consolas,monospace!important;font-size:9px!important;text-transform:uppercase;letter-spacing:0.14em!important;color:#7a8399!important;margin-bottom:8px;}
+#vcp-msg-17 table{width:100%;border-collapse:collapse;font-size:12px!important;}
+#vcp-msg-17 th{text-align:left!important;font-family:'Geist Mono',Consolas,monospace!important;font-size:8.5px!important;text-transform:uppercase;letter-spacing:0.1em!important;color:#7a8399!important;padding:5px 6px;border-bottom:1px solid rgba(45,49,66,0.18);}
+#vcp-msg-17 td{padding:6px;border-bottom:1px solid rgba(45,49,66,0.07);color:#2d3142!important;vertical-align:top;line-height:1.5!important;}
+#vcp-msg-17 td.mono{font-family:'Geist Mono',Consolas,monospace!important;font-size:10.5px!important;color:#2e5aa8!important;}
+#vcp-msg-17 .pt{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(45,49,66,0.06);}
+#vcp-msg-17 .pt:last-child{border-bottom:none;}
+#vcp-msg-17 .pt b{flex:0 0 22px;font-family:'Instrument Serif','Noto Serif SC',serif!important;font-size:20px!important;color:#eb6c36!important;font-weight:600!important;line-height:1.1!important;}
+#vcp-msg-17 .pt div{flex:1;color:#2d3142!important;font-size:12.5px!important;line-height:1.55!important;}
+#vcp-msg-17 .pt div code{font-family:'Geist Mono',Consolas,monospace!important;font-size:10.5px!important;background:rgba(46,90,168,0.08);padding:1px 4px;border-radius:3px;color:#2e5aa8!important;}
+#vcp-msg-17 svg{display:block;}
+#vcp-msg-17 .colophon{font-family:'Geist Mono',Consolas,monospace!important;font-size:9px!important;text-transform:uppercase;letter-spacing:0.16em!important;color:#7a8399!important;border-top:1px solid rgba(45,49,66,0.18);padding-top:8px;display:flex;justify-content:space-between;}
+  /* v6.33 渲染器注入：字体链兜底（根容器锁定 + 未声明字体元素继承）*/
+  #vcp-msg-17{font-family:ui-sans-serif,system-ui,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif !important}
+  #vcp-msg-17 div{font-family:inherit !important}
+  #vcp-msg-17 p{font-family:inherit !important}
+  #vcp-msg-17 span{font-family:inherit !important}
+  #vcp-msg-17 h1{font-family:inherit !important}
+  #vcp-msg-17 h2{font-family:inherit !important}
+  #vcp-msg-17 h3{font-family:inherit !important}
+  #vcp-msg-17 h4{font-family:inherit !important}
+  #vcp-msg-17 h5{font-family:inherit !important}
+  #vcp-msg-17 h6{font-family:inherit !important}
+  #vcp-msg-17 li{font-family:inherit !important}
+  #vcp-msg-17 td{font-family:inherit !important}
+  #vcp-msg-17 th{font-family:inherit !important}
+  #vcp-msg-17 a{font-family:inherit !important}
+  #vcp-msg-17 strong{font-family:inherit !important}
+  #vcp-msg-17 b{font-family:inherit !important}
+  #vcp-msg-17 em{font-family:inherit !important}
+  #vcp-msg-17 i{font-family:inherit !important}
+  #vcp-msg-17 blockquote{font-family:inherit !important}
+  #vcp-msg-17 pre{font-family:inherit !important}
+  #vcp-msg-17 code{font-family:inherit !important}
+  #vcp-msg-17 small{font-family:inherit !important}
+  #vcp-msg-17 label{font-family:inherit !important}
+  #vcp-msg-17 figcaption{font-family:inherit !important}
+  #vcp-msg-17 summary{font-family:inherit !important}
+  #vcp-msg-17 button{font-family:inherit !important}
+  </style>
+<div class="eyebrow" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">INVESTIGATION · RULEBASE UPDATE INJECT · 向 YG 报告</div>
+<h1 style="font-style: inherit !important; line-height: inherit !important;">规则库更新注入机制</h1>
+<div class="sub" style="font-weight: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">"[规则已更新]" 由 RuleInjector.reload() 无条件注入 —— 每批跨防抖窗口的文件操作 = 一条注入，无内容比对去重。</div>
+<div class="plate" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">
+<div class="phead" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">注入链路 Flow · 规则文件变化 → 对话浮现</div>
+<svg width="760" height="128" viewBox="0 0 760 128" role="img" aria-label="规则库更新注入链路" style="display: block; max-width: 100%;">
+<title>规则库更新注入链路</title>
+<desc>规则文件变化经fs.watch防抖触发reload并注入消息</desc>
+<defs>
+<marker id="r1coral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#eb6c36"></path></marker>
+<marker id="r1link" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2e5aa8"></path></marker>
+</defs>
+<rect x="14" y="16" width="112" height="32" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"></rect>
+<text x="70" y="36" text-anchor="middle" fill="#2d3142" font-size="10" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">规则文件变化</text>
+<rect x="136" y="16" width="112" height="32" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"></rect>
+<text x="192" y="36" text-anchor="middle" fill="#2d3142" font-size="10" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">fs.watch</text>
+<text x="192" y="46" text-anchor="middle" fill="#7a8399" font-size="7.5" font-family="Geist Mono,Consolas,monospace">全局+项目 .dsh/rules</text>
+<rect x="258" y="16" width="112" height="32" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"></rect>
+<text x="314" y="36" text-anchor="middle" fill="#2d3142" font-size="10" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">150ms 防抖</text>
+<text x="314" y="46" text-anchor="middle" fill="#7a8399" font-size="7.5" font-family="Geist Mono,Consolas,monospace">合并同批事件</text>
+<rect x="380" y="16" width="112" height="32" rx="6" fill="#fff5f0" stroke="#eb6c36" stroke-width="1.4"></rect>
+<text x="436" y="36" text-anchor="middle" fill="#2d3142" font-size="10" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">reload()</text>
+<text x="436" y="46" text-anchor="middle" fill="#eb6c36" font-size="7.5" font-family="Geist Mono,Consolas,monospace">injector.ts:100</text>
+<rect x="502" y="16" width="112" height="32" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"></rect>
+<text x="558" y="36" text-anchor="middle" fill="#2d3142" font-size="10" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">agent.inject</text>
+<text x="558" y="46" text-anchor="middle" fill="#7a8399" font-size="7.5" font-family="Geist Mono,Consolas,monospace">每活跃agent一条</text>
+<rect x="624" y="16" width="112" height="32" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"></rect>
+<text x="680" y="36" text-anchor="middle" fill="#2d3142" font-size="10" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">对话流浮现</text>
+<text x="680" y="46" text-anchor="middle" fill="#7a8399" font-size="7.5" font-family="Geist Mono,Consolas,monospace">pre-step 边界领取</text>
+<line x1="126" y1="32" x2="133" y2="32" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#r1coral)"></line>
+<line x1="248" y1="32" x2="255" y2="32" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#r1coral)"></line>
+<line x1="370" y1="32" x2="377" y2="32" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#r1coral)"></line>
+<line x1="492" y1="32" x2="499" y2="32" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#r1coral)"></line>
+<line x1="614" y1="32" x2="621" y2="32" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#r1coral)"></line>
+<rect x="258" y="80" width="234" height="30" rx="6" fill="#f5f5f5" stroke="#2e5aa8" stroke-width="1" stroke-dasharray="4 3"></rect>
+<text x="375" y="99" text-anchor="middle" fill="#2d3142" font-size="10" font-weight="600" font-family="Geist,Microsoft YaHei,sans-serif">次通道：面板 create/save/remove</text>
+<text x="375" y="108" text-anchor="middle" fill="#7a8399" font-size="7.5" font-family="Geist Mono,Consolas,monospace">service.ts:22 显式 reload</text>
+<line x1="436" y1="48" x2="436" y2="77" stroke="#2e5aa8" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#r1link)"></line>
+</svg>
+</div>
+<div class="plate" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">
+<div class="phead" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">触发源 · 双通道叠加</div>
+<div class="pt" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">1</b><div style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">主通道 fs.watch</b>：监听全局 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">~/.dsh/rules</code> 与项目 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">&lt;cwd&gt;/.dsh/rules</code>（<code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">injector.ts:113-146</code>，默认只监听直接子项），任何规则文件变化经 150ms 防抖（<code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">injector.ts:148-155</code>）触发 reload。注意：<b style="font-style: inherit !important; letter-spacing: inherit !important;">归档（Move-Item 到 archive/）会在源目录产生"删除"事件，必然触发</b>。</div></div>
+<div class="pt" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">2</b><div style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">次通道 UI 显式 reload</b>：设置面板 create/save/remove 成功后 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">service.ts:22</code> 显式调 reload——与 fs.watch 双通道叠加，时序错开时同一次保存可能注入两条。</div></div>
+<div class="pt" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">3</b><div style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">注入语义</b>：<code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">reload()</code>（<code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">injector.ts:90-110</code>）重算规则缓存后，对 activeAgents 中<b style="font-style: inherit !important; letter-spacing: inherit !important;">每个活跃 agent 无条件</b> <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">agent.inject</code> 一条"规则已更新"（第 100 行）；<b style="font-style: inherit !important; letter-spacing: inherit !important;">无内容差异比对、无已通知标记</b>。</div></div>
+</div>
+<div class="plate" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">
+<div class="phead" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">为何连续三次 · 机制必然推论</div>
+<div class="pt" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">·</b><div style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">防抖只合并 150ms 内同批事件；<b style="font-style: inherit !important; letter-spacing: inherit !important;">每批跨过防抖窗口的文件操作 → 一次 reload → 一条注入</b>。任务001 实际归档了两个规则文件（<code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">rule-任务001-项目切换跟随机制调查.md</code>、<code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">rule-任务001-方案定案与实施循环.md</code>）→ 两次 Move-Item 各触发源目录删除事件；叠加最后一次规则文件编辑 → <b style="font-style: inherit !important; letter-spacing: inherit !important;">三批操作 = 三条注入</b>。</div></div>
+<div class="pt" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">·</b><div style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;"><code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">agent.inject</code> 为<b style="font-style: inherit !important; letter-spacing: inherit !important;">不唤醒的排队消息</b>（dsh-agent README.zh.md:72），多次注入在对话流的 pre-step 边界<b style="font-style: inherit !important; letter-spacing: inherit !important;">连续浮现多条</b>——与观察到的连续三次一致。归档后规则从合成文本消失属预期（<code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">store.list</code> 平铺 readdir 不递归 archive）。</div></div>
+</div>
+<div class="plate" style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">
+<div class="phead" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">抑制失效原因 · 改进建议</div>
+<table style="display: block; width: 100%; max-width: 100%; overflow-x: auto;">
+<tbody><tr><th style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">项</th><th style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">现状</th><th style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;">为何失效</th></tr>
+<tr><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">并发锁 reloadPending</td><td class="mono" style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">只合并"进行中"的 reload</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">三次 reload 先后完成、互不重叠，各注入一条</td></tr>
+<tr><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">150ms 防抖</td><td class="mono" style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">只合并单批事件</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">跨窗口的操作批各自触发完整 reload</td></tr>
+<tr><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">内容快照对比</td><td class="mono" style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">无</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">任何文件变化（含归档删除）都注入，不判内容是否真变</td></tr>
+<tr><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">通知时间窗</td><td class="mono" style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">无</td><td style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;">无每 agent 节流</td></tr>
+</tbody></table>
+<div class="pt" style="margin-top: 10px; font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">★</b><div style="font-weight: inherit !important; font-style: inherit !important; letter-spacing: inherit !important;"><b style="font-style: inherit !important; letter-spacing: inherit !important;">首选改进（报告 §八）</b>：在 <code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">reload()</code>（<code style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">injector.ts:90-110</code>）内做<b style="font-style: inherit !important; letter-spacing: inherit !important;">新旧合成文本对比</b>，无变化则跳过 inject——单点改动根治无效注入；其次每 agent 通知节流（2s 窗口合并）；tests/ 无 injector 测试，建议补三个用例。</div></div>
+</div>
+<div class="colophon" style="font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important;"><span style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">SRC injector.ts:100 · DUAL-CHANNEL · RELOAD ×N</span><span style="font-size: inherit !important; font-weight: inherit !important; font-style: inherit !important; line-height: inherit !important; letter-spacing: inherit !important;">REPORT 12.9KB ✓ · 调查完成</span></div>
+</div>
+</body>
+</html>
