@@ -20,7 +20,6 @@ class RuleInjector {
   boot(): Promise<void>
   refresh(cwd?: string): Promise<void>
   renderFromCache(cwd?: string): string
-  currentProjectCwd(): string | undefined
   reload(): Promise<void>
   watch(): void
 }
@@ -57,13 +56,11 @@ class RuleInjector {
 - 未命中该 cwd → 回退全局缓存；全局也空 → 返回 `''`。
 - 纯同步、零 IO，保证 `text` 签名 `(context) => string`。
 
-#### `currentProjectCwd()`
+#### ~~`currentProjectCwd()`~~（0.1.8 已删除）
 
-同步返回「当前项目」cwd：最近创建的活跃 agent 的 cwd；无活跃 agent 或无有效 cwd 返回 `undefined`。
-
-- 数据来源：`watch()` 在 `agent/created` 时以 `agent.session.header.cwd` 记录到 `activeAgents`。
-- **空字符串过滤**：仅非空字符串视为有效 cwd（`typeof === 'string' && !== ''`）；最近 agent 为空 cwd 时自动回退到更早的有效 agent，避免返回空路径。
-- 供 `RulesService.currentCwd` 端点使用（UI 判断「是否已选定项目」）。
+原「最近创建的活跃 agent 的 cwd」这一对「当前对话」的近似被移除（调查报告-001）：agent 注册表没有「当前对话」概念——
+切回 live 会话不重新 `announce`，该量必然偏离当前会话。0.1.8 起 cwd 由 client 经官方判据
+`retainedBy.mainView > 0` 解析（见 06），host 不再猜测；`activeAgents` 仅保留作 `reload()` 的注入目标。
 
 #### `reload()`
 

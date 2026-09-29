@@ -61,7 +61,7 @@ export function apply(ctx: Context): void {
   // fetchRoutes.set（owner.effect 失配自动清理，dsh-client-connection lib:594-600），零 webServer 触碰；
   // /api 共享 handler 先查 fetchRoutes 再查 interceptor（:576-584），与 api-gateway（interceptor）无冲突。
   ctx.inject(['connection'], (c) => {
-    for (const op of ['list', 'create', 'save', 'remove', 'reload', 'currentCwd'] as const) {
+    for (const op of ['list', 'create', 'save', 'remove', 'reload'] as const) {
       c.connection.fetch.register({
         path: `/api/rulebase/${op}`,
         methods: ['POST'],

@@ -65,14 +65,9 @@ export class RuleController {
     else this.setState({ status: 'error', error: res.error.message })
   }
 
-  /** 当前项目 cwd；本地（当前对话 session.cwd）优先，无值才走 RPC（host 端点作回退）；未选定项目时返回 null */
+  /** 当前项目 cwd：本地解析（官方主视图会话的 cwd）；无主视图会话（未选定项目）返回 null。0.1.8 起不再调用 RPC 端点（host 无法回答"当前对话"，见调查报告-001） */
   async currentCwd(): Promise<string | null> {
-    const local = this.resolveCwd?.()
-    if (local) return local
-    const res = await this.callSafe('currentCwd', {})
-    if (!res.ok) return null
-    const value = res.value as { cwd: string | null } | undefined
-    return value?.cwd ?? null
+    return this.resolveCwd?.() ?? null
   }
 
   async reload(level: RuleLevel): Promise<void> {

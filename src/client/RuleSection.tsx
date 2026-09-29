@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { CSSProperties, JSX, MouseEvent as ReactMouseEvent, RefObject } from 'react'
 import type { RuleController } from './controller.ts'
-import type { SessionsListProvider } from './index.ts'
+import { mainViewSession, type SessionsListProvider } from './index.ts'
 import type { Rule, RuleLevel } from './types.ts'
 
 export interface RuleSectionProps {
@@ -48,7 +48,7 @@ export function RuleSection({ controller, sessionsList }: RuleSectionProps): JSX
   /** 当前选中 session id（切换对话即变）：纳入依赖触发 currentCwd/load 重拉 */
   const currentSessionId = useSyncExternalStore(
     sessionsList.subscribe,
-    () => sessionsList.getSnapshot().current,
+    () => mainViewSession(sessionsList.getSnapshot())?.id,
   )
 
   useEffect(() => {

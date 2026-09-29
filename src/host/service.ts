@@ -19,7 +19,7 @@ export class RulesService {
   readonly dispatch: ConnectionRpcHandler = async (endpoint, payload) => {
     try {
       const value = await this.invoke(endpoint, payload)
-      if (endpoint !== 'list' && endpoint !== 'reload' && endpoint !== 'currentCwd') void this.injector.reload()
+      if (endpoint !== 'list' && endpoint !== 'reload') void this.injector.reload()
       return this.ok(value)
     } catch (err) {
       return transportError(err)
@@ -33,9 +33,6 @@ export class RulesService {
   private async invoke(endpoint: string, payload: unknown): Promise<unknown> {
     const p = (payload ?? {}) as Record<string, unknown>
     switch (endpoint) {
-      case 'currentCwd': {
-        return { cwd: this.injector.currentProjectCwd() ?? null }
-      }
       case 'list': {
         const level = assertLevel(p.level)
         const cwd = this.resolveCwd(level, asString(p.cwd))
@@ -74,16 +71,15 @@ export class RulesService {
     }
   }
 
-  /** 项目级解析真实 cwd：client 传入优先，缺省用当前项目；全局级返回 undefined */
+  /** 项目级 cwd：仅采用调用方传入（client 经官方判据解析，见 docs/api/06）；全局级返回 undefined。0.1.8 起不再以「最后注册 agent」猜测（调查报告-001） */
   private resolveCwd(level: RuleLevel, cwd?: string): string | undefined {
-    return level === 'project' ? (cwd ?? this.injector.currentProjectCwd()) : undefined
+    return level === 'project' ? cwd : undefined
   }
 
-  /** 项目级写操作：解析真实 cwd，无则抛错提示先选定项目（调用方保证 level === 'project'）；报错文案按动作名词生成 */
+  /** 项目级写操作：仅采用调用方传入 cwd；无则抛错提示先选定项目（调用方保证 level === 'project'）；报错文案按动作名词生成 */
   private requireProjectCwd(cwd?: string, action = '保存'): string {
-    const resolved = cwd ?? this.injector.currentProjectCwd()
-    if (!resolved) throw new Error(`当前未选定项目，无法${action}项目规则，请先选定一个项目`)
-    return resolved
+    if (!cwd) throw new Error(`当前未选定项目，无法${action}项目规则，请先选定一个项目`)
+    return cwd
   }
 }
 

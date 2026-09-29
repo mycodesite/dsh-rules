@@ -3,6 +3,31 @@
 本项目的所有显著变更记录于此。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.8] - 2026-09-30
+
+### Fixed
+
+- **设置面板「规则→项目」在多仓切换场景显示错仓规则**（调查报告-001 的缺陷修复）：0.1.6 引入的
+  `resolveSessionCwd()` 读的是**不存在的字段** `sessions.list.getSnapshot().current`（dsh 快照只有
+  `ids/byId/phase/projectionsBySession`），cwd 恒为 `undefined`、project 级请求恒不带 cwd；随后 host
+  回退 `injector.currentProjectCwd()`（「最后注册的 agent」的 cwd——切回 live 会话不重新 announce，
+  该量必然偏离当前对话）→ 面板列出一致错仓的规则，且切换对话后不重拉。
+  现：client 改用 dsh 官方判据 `retainedBy.mainView > 0`（新增 `mainViewSession` 纯函数，
+  workspace/open-in-app/agent-preset/session 六处同源），并以主视图会话 id 作依赖触发重拉
+  （`src/client/sessions.ts`、`src/client/index.ts`、`src/client/RuleSection.tsx`）。
+
+### Changed
+
+- **host 移除 `currentProjectCwd()` 猜测式回退**：`RulesService` 项目级读写的 cwd **仅采用 client 传入**；
+  无 cwd 时 `list` 返回 `[]`、写操作抛「未选定项目」（文案不变）；`currentCwd` RPC 端点删除
+  （host 无法回答「当前对话」，不假装能答）；`RuleController.currentCwd()` 改为纯本地解析、不再发 RPC
+  （`src/host/service.ts`、`src/host/injector.ts`、`src/host/index.ts`、`src/client/controller.ts`）。
+- 测试：新增 `tests/client-mainview.test.ts`（官方判据 4 例）；`tests/smoke.test.ts` 移除
+  `currentProjectCwd`/`currentCwd` 用例并适配「cwd 仅 client 传入」新语义；`tests/controller-rpc.test.ts`
+  更新 `currentCwd` 纯本地断言与 op 守卫。
+- 文档连动：`docs/api/03`（方法删除说明）、`04`（端点表与 cwd 解析）、`06`（`sessions.ts`、官方判据、
+  `currentCwd` 纯本地）、`07`（`sessionsList` 注入与依赖）、`README`（项目路径识别表述）。
+
 ## [0.1.7] - 2026-09-30
 
 ### Fixed

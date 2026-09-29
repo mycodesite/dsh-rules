@@ -79,16 +79,6 @@ export class RuleInjector {
     return this.cache.get(cwd ?? GLOBAL_KEY) ?? this.cache.get(GLOBAL_KEY) ?? ''
   }
 
-  /** 当前项目 cwd：最近创建的活跃 agent 的 cwd；无活跃 agent 或无 cwd 返回 undefined */
-  currentProjectCwd(): string | undefined {
-    const values = [...this.activeAgents.values()]
-    for (let i = values.length - 1; i >= 0; i--) {
-      // 仅非空字符串视为有效 cwd（activeAgents 可能存入 ''，见 watch 的 cwd ?? ''）
-      if (typeof values[i] === 'string' && values[i] !== '') return values[i]
-    }
-    return undefined
-  }
-
   /** 变更收敛：异步重算缓存 + 显式 agent.inject（不唤醒驱动）；新旧合成文本一致则跳过注入 */
   async reload(): Promise<void> {
     if (this.reloadPending) return

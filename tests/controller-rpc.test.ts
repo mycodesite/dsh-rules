@@ -106,11 +106,13 @@ test('remove：payload 精确透传 { level, id }（删除目标绑定归属级�
   assert.deepEqual(seen, { endpoint: 'remove', payload: { level: 'project', id: 'A' } })
 })
 
-test('currentCwd：传输失败返回 null（按"未选定项目"降级，不抛出）', async () => {
-  const rpc = makeRpc(async () => { throw new Error('HTTP 405') })
-  const controller = new RuleController(rpc)
+test('currentCwd：resolveCwd 无值（未选定项目）→ null，且不发 RPC（0.1.8 起纯本地解析）', async () => {
+  let called = false
+  const rpc = makeRpc(async () => { called = true; throw new Error('HTTP 405') })
+  const controller = new RuleController(rpc, () => undefined)
   assert.equal(await controller.currentCwd(), null)
-  assert.equal(controller.getLastError(), 'HTTP 405')
+  assert.equal(called, false, '纯本地解析不应发出任何 RPC')
+  assert.equal(controller.getLastError(), null)
 })
 
 // ===== 任务001（方案 C+A）增补：cwd 透传 / level 感知 / 本地优先 / 回退 =====
@@ -149,17 +151,6 @@ test('currentCwd：resolveCwd 有值时本地优先返回，不发 RPC（§7.2-A
   assert.deepEqual(seen, [], '本地命中时不应发出任何 RPC')
 })
 
-test('currentCwd：resolveCwd 返回 undefined 时回退 RPC 端点，payload 形状不变（§7.2-A 用例4）', async () => {
-  let seen: { endpoint: string; payload: unknown } | null = null
-  const rpc = makeRpc(async (endpoint, payload) => {
-    seen = { endpoint, payload }
-    return okResult({ cwd: '/host' })
-  })
-  const controller = new RuleController(rpc, () => undefined)
-  assert.equal(await controller.currentCwd(), '/host')
-  assert.deepEqual(seen, { endpoint: 'currentCwd', payload: {} })
-})
-
 test('create/save/remove：project 级 payload 带 cwd，global 级不带（§7.2-A 用例5，level 感知回归）', async () => {
   const seen: Array<{ endpoint: string; payload: Record<string, unknown> }> = []
   const rpc = makeRpc(async (endpoint, payload) => {
@@ -191,7 +182,7 @@ test('host apply：RPC 通道注册使用双依赖注入且无废弃第三参（
   assert.match(src, /ctx\.inject\(\['connection'\]/)
   assert.match(src, /fetch\.register\(\{/)
   assert.match(src, /path:\s*`\/api\/rulebase\/\$\{op\}`/)
-  assert.match(src, /'list',\s*'create',\s*'save',\s*'remove',\s*'reload',\s*'currentCwd'/)
+  assert.match(src, /'list',\s*'create',\s*'save',\s*'remove',\s*'reload'/)
   assert.match(src, /requestBody:\s*'buffered'/)
   assert.doesNotMatch(src, /rpc\.handle\(/)
   assert.doesNotMatch(src, /'webServer'/)

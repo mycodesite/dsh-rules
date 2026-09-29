@@ -6,15 +6,13 @@ import type { ComponentType } from 'react'
 import { RuleController, type RuleRpc } from './controller.ts'
 import { RuleSection, type RuleSectionProps } from './RuleSection.tsx'
 import type { RpcResult } from './types.ts'
+import { mainViewSession, type SessionsListProvider } from './sessions.ts'
+
+// 对外 re-export：类型与「当前主视图会话」判据（供 RuleSection 与单测消费；实现见 sessions.ts）
+export { mainViewSession, type SessionRow, type SessionsListProvider } from './sessions.ts'
 
 export const name = 'rulebase'
 export const inject = ['slots', 'connection', 'sessions']
-
-/** sessions.list 的最小快照面（不引入运行时依赖，仅类型声明） */
-export interface SessionsListProvider {
-  getSnapshot(): { current: string | undefined; byId: Record<string, { cwd?: string } | undefined> }
-  subscribe(listener: () => void): () => void
-}
 
 /** 最小 ClientContext（运行时由 dsh client 框架注入） */
 export interface RuleBaseClientContext {
@@ -39,12 +37,9 @@ export function apply(ctx: RuleBaseClientContext): void {
   const ruleRpc: RuleRpc = {
     call: (endpoint, payload) => ctx.connection.rpc.call('/api', `rulebase/${endpoint}`, payload),
   }
-  // 当前对话 cwd：取 sessions.list 快照的当前 session（session.header.cwd 快照），不依赖 agent 创建时序
+  // 当前对话 cwd：取「当前主视图会话」（retainedBy.mainView > 0）的 cwd，不依赖 agent 创建时序
   const sessions = ctx.sessions
-  const resolveSessionCwd = (): string | undefined => {
-    const s = sessions.list.getSnapshot()
-    return s.current === undefined ? undefined : s.byId[s.current]?.cwd
-  }
+  const resolveSessionCwd = (): string | undefined => mainViewSession(sessions.list.getSnapshot())?.cwd
   const controller = new RuleController(ruleRpc, resolveSessionCwd)
 
   ctx.slots.inject('settings.section', () => ctx.slots.register(
