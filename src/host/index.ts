@@ -1,4 +1,5 @@
 // dsh 插件 host 入口：装配 RuleStore、RuleInjector、RulesService。
+import path from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 import type {} from '@deepseek-ai/dsh-agent'
@@ -8,6 +9,7 @@ import { RuleStore } from './store.ts'
 import { GUIDANCE, RuleInjector } from './injector.ts'
 import { RulesService } from './service.ts'
 import { bridgeRpc } from './bridge.ts'
+import { globalRulesDir } from './paths.ts'
 
 // 自定义注入来源：扩展 MessageSourceMap（merge-extensible，见 dsh-llm message.ts）
 declare module '@deepseek-ai/dsh-llm' {
@@ -19,9 +21,25 @@ declare module '@deepseek-ai/dsh-llm' {
 export const name = 'rulebase'
 export const inject: string[] = []
 
+/**
+ * 全局规则目录解析：优先宿主 cordis 服务 dshHomePath（与 dsh 官方 resolveDshHome 完全一致，含 configured 覆盖），
+ * 服务未提供 / 查询失败 / 非函数时回退 paths.globalRulesDir()（$DSH_HOME → ~/.dsh）。
+ * 装配期解析一次并同时传给 store 与 injector，保证读、写、监听三处目录同源。
+ */
+export function resolveGlobalRulesDir(ctx: Context): string {
+  try {
+    const dshHomePath = ctx.get('dshHomePath')
+    if (typeof dshHomePath === 'function') return path.join(dshHomePath(), 'rules')
+  } catch {
+    // 服务不可用：走回退（单测与未提供该服务的宿主环境）
+  }
+  return globalRulesDir()
+}
+
 export function apply(ctx: Context): void {
-  const store = new RuleStore()
-  const injector = new RuleInjector(ctx, store)
+  const globalDir = resolveGlobalRulesDir(ctx)
+  const store = new RuleStore(globalDir)
+  const injector = new RuleInjector(ctx, store, globalDir)
   const service = new RulesService(store, injector)
 
   // 稳定引导段（静态，order 160）+ 动态规则正文（同步读缓存，order 170）

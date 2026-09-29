@@ -9,11 +9,10 @@
 // 判定对象说明：直接对比 renderRules 合成文本（agent 感知面）——同内容重写、仅换行差异（store.normalize
 // 已抹平）文本不变应跳过；无 H1 的文件改名会改变合成文本（title 回退为 id）应注入，有 H1 改名则文本不变应跳过。
 // 风格与 tests/host-remove.test.ts 一致：node:test + assert/strict，直测 src TS 源码，真实临时目录。
-// 窗口性质（审核报告 §四.3）：watch() 会经 watchDir(globalRulesDir()) 给真实 ~/.dsh/rules 挂短暂监听
-// （globalRulesDir() 为 paths 直调、injector 无注入点，属现状约束）；stub ctx.effect 立即捕获清理函数，
-// t.after 关闭全部 watcher，测试无全局残留。规则内容本身读装置临时目录（RuleStore(globalDir) 构造注入），
-// 与真实 ~/.dsh/rules 无关；仅当测试运行的毫秒级窗口内恰有该目录文件事件时，debounceReload 才可能
-// 多触发一次 reload 使计数出现偶发噪声——概率极低，属已知窗口。
+// 隔离性（任务003 起）：RuleInjector 已支持第三参 globalDir，装置以 new RuleInjector(ctx, store, globalDir)
+// 构造，watcher 与规则读写同源指向装置临时目录，全程不触碰真实 ~/.dsh/rules——历史窗口（审核报告 §四.3：
+// "globalRulesDir() 为 paths 直调、injector 无注入点"）已随本次改动消除；stub ctx.effect 立即捕获清理函数，
+// t.after 关闭全部 watcher，测试无全局残留。
 import { test, type TestContext } from 'node:test'
 import assert from 'node:assert/strict'
 import { rmSync } from 'node:fs'
@@ -70,7 +69,7 @@ async function makeHarness(t: TestContext): Promise<Harness> {
     // stub 语义差异：立即执行 fn() 捕获清理函数（cordis 真实语义为延迟到 dispose），仅测试装置行为
     effect: (fn: () => () => void) => { clean = fn() },
   } as unknown as Context
-  const injector = new RuleInjector(ctx, store)
+  const injector = new RuleInjector(ctx, store, globalDir)
   injector.watch()
   return {
     store,

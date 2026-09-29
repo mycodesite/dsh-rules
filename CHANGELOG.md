@@ -3,6 +3,30 @@
 本项目的所有显著变更记录于此。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.7] - 2026-09-30
+
+### Fixed
+
+- **全局规则目录不再写死 `~/.dsh`，改为跟随 `DSH_HOME`**（设计阶段即要求「为与 dsh 统一，优先回读 dsh home」，
+  此前未落地）：此前 `globalRulesDir()` 恒为 `os.homedir()/.dsh/rules`，凡 `DSH_HOME` 偏离默认值的实例，
+  全局规则都会读写错误配置域（例如测试实例 `DSH_HOME=tests\.dsh` 实际改写的是生产 home 的全局规则）。
+  现解析顺序为 **宿主 cordis 服务 `dshHomePath`（与官方 `resolveDshHome` 一致，含 `configured` 覆盖）
+  → `$DSH_HOME`（`trim()` 后非空）→ `~/.dsh`**（`src/host/paths.ts`、`src/host/index.ts`）。
+
+### Changed
+
+- **`RuleInjector` 构造函数新增可选第三参 `globalDir`**：`watch()` 取 `this.globalDir ?? globalRulesDir()`，
+  消除「store 目录可注入、watcher 却直调 paths」的既有缺口——此前即便覆盖了 store 的全局目录，
+  文件监听仍会挂在真实 `~/.dsh/rules`（`src/host/injector.ts`）。
+- 装配入口新增并导出 `resolveGlobalRulesDir(ctx)`：装配期解析一次，同时注入 `RuleStore` 与 `RuleInjector`，
+  保证读、写、监听三处目录同源（`src/host/index.ts`）。
+- 测试增至 53（新增 `tests/paths-dshhome.test.ts` 9 例：`DSH_HOME` 已设 / 未设 / 纯空白 / 带空格 trim /
+  相对值绝对化，以及装配层 `dshHomePath` 优先与三种回退）；`tests/smoke.test.ts`、`tests/injector-reload.test.ts`
+  改为注入 `globalDir`，**不再对真实 `~/.dsh/rules` 挂 watcher**（历史窗口消除）。
+- 文档连动：`docs/api/01`（三层解析契约与 `DSH_HOME` 语义）、`docs/api/02`（`globalDir` 说明）、
+  `docs/api/03`（构造第三参、`watch()` 目录来源）、`docs/api/05`（装配第 1 步解析全局目录）、
+  `README`（存储位置 + 升级搬迁提示）。
+
 ## [0.1.5] - 2026-09-27
 
 ### Fixed

@@ -48,10 +48,13 @@ export class RuleInjector {
 
   private readonly ctx: Context
   private readonly store: RuleStore
+  /** 全局规则目录（装配层注入；缺省回退 paths 解析）——与 store 的目录同源，避免 watcher 挂错目录 */
+  private readonly globalDir: string | undefined
 
-  constructor(ctx: Context, store: RuleStore) {
+  constructor(ctx: Context, store: RuleStore, globalDir?: string) {
     this.ctx = ctx
     this.store = store
+    this.globalDir = globalDir
   }
 
   /** 启动：预加载全局规则缓存 */
@@ -117,7 +120,7 @@ export class RuleInjector {
 
   /** 装配文件监听与会话生命周期钩子 */
   watch(): void {
-    this.watchDir(globalRulesDir())
+    this.watchDir(this.globalDir ?? globalRulesDir())
     this.ctx.on('agent/created', (payload) => {
       const agent = payload.agent
       const cwd = agent.session.header.cwd

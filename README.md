@@ -7,7 +7,7 @@
 **它能为你做什么**：
 
 - **把你想让 AI 记住的规矩，写进一处、处处生效**——项目规范、代码风格、命令约定、注意事项等，以 Markdown 写成规则文件，dsh 每次对话自动把它注进系统提示词，AI 无需你重复交代。
-- **全局一套 + 项目一套，互不干扰**——全局规则（`~/.dsh/rules/`）管所有项目共用的规矩；项目规则（`<cwd>/.dsh/rules/`）跟着 `agent.session.header.cwd` 走，切到哪个项目就套用哪个项目的规则，跨项目切换自动跟随。
+- **全局一套 + 项目一套，互不干扰**——全局规则（`<DSH home>/rules/`，跟随 `DSH_HOME`，未设置时为 `~/.dsh/rules/`）管所有项目共用的规矩；项目规则（`<cwd>/.dsh/rules/`）跟着 `agent.session.header.cwd` 走，切到哪个项目就套用哪个项目的规则，跨项目切换自动跟随。
 - **改一行、即时生效**——规则文件保存即被文件监听捕获，下一次模型请求自动采用，无需重启 dsh。
 - **可视化管理，不用碰命令行**——dsh 设置面板「规则」区可直接增删改查全局/项目规则、一键刷新，配色随 dsh 亮/深外观自动切换。
 
@@ -16,7 +16,7 @@
 规则仅以 `.md` 文件持久化，**不注册 dsh settings 命名空间、不写入 `settings.yaml`**。
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.3-blue.svg)](https://github.com/mycodesite/dsh-rules/releases)
+[![version](https://img.shields.io/badge/version-0.1.7-blue.svg)](https://github.com/mycodesite/dsh-rules/releases)
 
 ## 功能
 
@@ -29,10 +29,14 @@
 
 | 级别 | 目录 |
 |:--|:--|
-| 全局 | `~/.dsh/rules/*.md` |
+| 全局 | `<DSH home>/rules/*.md`（跟随 `DSH_HOME`；未设置时为 `~/.dsh/rules/*.md`） |
 | 项目 | `<cwd>/.dsh/rules/*.md` |
 
 每个 `.md` 文件即一条规则；文件名（去扩展名）作为规则 id。
+
+> **从旧版本升级（v0.1.7 起）**：全局规则目录改为跟随 `DSH_HOME`。默认安装（未设置 `DSH_HOME`）行为**完全不变**；
+> 若你曾用非默认 `DSH_HOME` 的实例（例如测试实例）创建过全局规则，那些规则此前落在
+> `%USERPROFILE%\.dsh\rules`，升级后需**手动搬迁**到新 home 的 `rules` 目录。
 
 ## 安装与运行
 
@@ -45,7 +49,7 @@
 dsh plugin add github:mycodesite/dsh-rules
 
 # 指定版本
-dsh plugin add github:mycodesite/dsh-rules#v0.1.3
+dsh plugin add github:mycodesite/dsh-rules#v0.1.7
 
 # 指定 profile（web / tui 等）
 dsh plugin --profile web add github:mycodesite/dsh-rules

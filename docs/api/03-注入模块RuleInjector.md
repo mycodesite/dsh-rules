@@ -16,7 +16,7 @@ const GUIDANCE: string
 
 ```ts
 class RuleInjector {
-  constructor(ctx: Context, store: RuleStore)
+  constructor(ctx: Context, store: RuleStore, globalDir?: string)
   boot(): Promise<void>
   refresh(cwd?: string): Promise<void>
   renderFromCache(cwd?: string): string
@@ -26,12 +26,13 @@ class RuleInjector {
 }
 ```
 
-#### `constructor(ctx, store)`
+#### `constructor(ctx, store, globalDir?)`
 
 | 参数 | 类型 | 说明 |
 |:--|:--|:--|
 | `ctx` | `Context` | cordis 上下文（监听 `agent/created`、`agent/disposed`，注册 effect） |
 | `store` | `RuleStore` | 规则文件读写 |
+| `globalDir` | `string \| undefined` | 全局规则目录（装配入口注入，与 store 同源）；省略时 `watch()` 回退 `globalRulesDir()` |
 
 #### `boot()`
 
@@ -77,7 +78,7 @@ class RuleInjector {
 
 装配文件监听与会话生命周期钩子：
 
-- `watch` 全局规则目录；`agent/created` 时记录该 agent 的 cwd、`watch` 其项目目录、并异步 `refresh(cwd)`（新对话预填项目规则缓存）。
+- `watch` 全局规则目录（取 `this.globalDir ?? globalRulesDir()`，消除 watcher 与 store 目录不同源的缺口）；`agent/created` 时记录该 agent 的 cwd、`watch` 其项目目录、并异步 `refresh(cwd)`（新对话预填项目规则缓存）。
 - `agent/disposed` 时移除活动 agent。
 - `ctx.effect` 在插件卸载时关闭全部 watcher。
 - 文件变化防抖 `150ms` 后触发 `reload()`。
@@ -92,5 +93,5 @@ class RuleInjector {
 ## 设计要点
 
 - **同步/异步边界**：`boot`/`refresh`/`reload`/watcher 为异步读盘；`renderFromCache` 为同步热路径，签名符合 `(context) => string`。
-- **cwd 解析**在装配入口内联为 `assembleCtx.agent?.session.header.cwd ?? process.cwd()`。
+- **cwd 解析**在装配入口内联为 `assembleCtx.agent?.session.header.cwd ?? process.cwd()`；全局目录同源处理：在装配入口解析后注入（优先宿主服务 `dshHomePath`，见 05）。
 - 文件监听仅监听平铺目录；Windows `fs.watch` 非递归、事件可能合并/丢失，极端情况由下次 `refresh` 重扫兜底。

@@ -39,7 +39,7 @@ class RuleStore {
 
 | 参数 | 类型 | 说明 |
 |:--|:--|:--|
-| `globalDir` | `string \| undefined` | 覆盖全局目录（测试隔离用）；省略用 `~/.dsh/rules` |
+| `globalDir` | `string \| undefined` | 覆盖全局目录；省略时回退 `paths.globalRulesDir()`（`<DSH home>/rules`，跟随 `DSH_HOME`） |
 
 #### `list(level, cwd?)`
 

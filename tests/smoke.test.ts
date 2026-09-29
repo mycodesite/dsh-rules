@@ -78,7 +78,8 @@ test('RuleInjector.currentProjectCwd：空字符串 cwd 被跳过，返回最近
   try {
     const store = new RuleStore(path.join(cwd, 'global'))
     const { ctx, created, dispose } = fakeCtx()
-    const injector = new RuleInjector(ctx, store)
+    // 注入同一目录：watcher 与规则读写同源，不触碰真实 ~/.dsh/rules
+    const injector = new RuleInjector(ctx, store, path.join(cwd, 'global'))
     injector.watch()
 
     // 最近创建的 agent 是空 cwd（无项目会话）→ 应被跳过
@@ -98,7 +99,8 @@ test('RuleInjector.currentProjectCwd：仅空字符串 cwd 时返回 undefined',
   try {
     const store = new RuleStore(path.join(cwd, 'global'))
     const { ctx, created, dispose } = fakeCtx()
-    const injector = new RuleInjector(ctx, store)
+    // 注入同一目录：watcher 与规则读写同源，不触碰真实 ~/.dsh/rules
+    const injector = new RuleInjector(ctx, store, path.join(cwd, 'global'))
     injector.watch()
 
     created({ session: { header: { cwd: '' } } })
