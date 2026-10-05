@@ -42,6 +42,7 @@ dump-*.json
 # ── 内部文档与记录（不公开发布）──
 .trae/
 docs/变更记录/
+docs/给人类用户的VCP卡片/
 
 # ── 开发态补丁（含本机绝对路径，不公开）──
 cordis.local.yml
