@@ -186,7 +186,7 @@ export function RuleSection({ controller, sessionsList }: RuleSectionProps): JSX
             value={editing.content}
             disabled={busy}
             onChange={(e) => setEditing({ ...editing, content: e.target.value })}
-            placeholder={'# 规则标题\n\n规则内容…'}
+            placeholder={'# 规则标题\n\n## 第一节\n\n规则内容…'}
           />
           <div style={styles.editorActions}>
             <button type="button" style={styles.ghostButton} onClick={() => setEditing(null)} disabled={busy}>取消</button>

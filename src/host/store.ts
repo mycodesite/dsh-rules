@@ -35,9 +35,10 @@ function normalize(text: string): string {
 
 /** 从正文提取标题：首个 H1 或首行，无则用 id */
 function titleOf(id: string, content: string): string {
-  const first = content.trimStart().split('\n', 1)[0]?.trim() ?? ''
-  if (first.startsWith('# ')) return first.slice(2).trim() || id
-  if (first.startsWith('#')) return first.slice(1).trim() || id
+  const body = content.charCodeAt(0) === 0xFEFF ? content.slice(1) : content
+  const first = body.trimStart().split('\n', 1)[0]?.trim() ?? ''
+  const m = first.match(/^#{1,6}\s+(.*)$/)
+  if (m) return m[1].trim() || id
   return first.length > 0 ? first.slice(0, 120) : id
 }
 

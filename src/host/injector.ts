@@ -9,7 +9,7 @@ import { MAX_TOTAL_BYTES, type Rule, type RuleStore } from './store.ts'
 /** 稳定引导段：静态文本，保 KV Cache 前缀稳定 */
 export const GUIDANCE = `## 规则库（RuleBase）
 
-本环境由 DSH 插件 rulebase 注入“规则”。下方【全局规则】/【项目规则】是当前生效的约束，请在对话与执行中严格遵守。`
+本环境由 DSH 插件 rulebase 注入“规则”。下方【全局规则】/【项目规则】是当前生效的约束，请在对话与执行中严格遵守。（某一级规则目录为空时，该级分区不出现。）`
 
 /** 规则库注入边界标记：全角方括号，规则域/宿主段/VCP 段全库零碰撞（任务031 实测） */
 const RULES_BOUNDARY_BEGIN = '［规则库开始］'
@@ -39,7 +39,77 @@ function renderRules(global: Rule[], project: Rule[], cwd?: string): string {
 
 function ruleBlock(rule: Rule): string {
   const heading = rule.title && rule.title !== rule.id ? rule.title : rule.id
-  return `#### ${heading}\n\n${rule.content}`
+  const stripped = stripLeadingTitle(rule.content, heading)  // 剥离首行标题（尽力而为）
+  const hMin = scanHeadings(stripped)                         // 扫最浅标题层级
+  const shift = hMin > 0 && hMin < 5 ? 5 - hMin : 0           // 差值降级到 H5 起
+  return `#### ${heading}\n\n${relevel(stripped, shift)}`
+}
+
+/** 剥离首行 ATX 标题（仅当剥 # 后文本 == heading；比对不中绝不误剥） */
+export function stripLeadingTitle(content: string, heading: string): string {
+  const hasBOM = content.charCodeAt(0) === 0xFEFF
+  const body = hasBOM ? content.slice(1) : content
+  const lines = body.split('\n')
+  const first = lines[0]?.trim() ?? ''
+  const m = first.match(/^#{1,6}\s+(.*)$/)  // 与 titleOf 修复后同源
+  if (m && m[1].trim() === heading) {
+    let start = 1
+    if (lines[1] !== undefined && lines[1].trim() === '') start = 2  // 跳过紧随空行
+    const rest = lines.slice(start).join('\n')
+    return (hasBOM ? '\uFEFF' : '') + rest
+  }
+  return content  // 比对不中，不剥（绝不误删用户正文）
+}
+
+/** 扫描最浅 ATX 标题层级（围栏状态机跳过代码块）；0 = 无标题 */
+export function scanHeadings(content: string): number {
+  const body = content.charCodeAt(0) === 0xFEFF ? content.slice(1) : content
+  const lines = body.split('\n')
+  let inFence = false, fenceChar = '', hMin = 0
+  for (const line of lines) {
+    const fm = line.match(/^ {0,3}(`{3,}|~{3,})/)
+    if (fm) {
+      const ch = fm[1][0]
+      if (!inFence) { inFence = true; fenceChar = ch }
+      else if (ch === fenceChar) { inFence = false; fenceChar = '' }
+      continue
+    }
+    if (inFence) continue
+    const hm = line.match(/^ {0,3}(#{1,6})([\t ]|$)/)
+    if (hm) {
+      const lvl = hm[1].length
+      if (hMin === 0 || lvl < hMin) hMin = lvl
+    }
+  }
+  return hMin
+}
+
+/** 标题行整体 +shift（H6 钳制，严禁 H7）；跳过围栏内与行内代码 */
+export function relevel(content: string, shift: number): string {
+  if (shift <= 0) return content
+  const hasBOM = content.charCodeAt(0) === 0xFEFF
+  const body = hasBOM ? content.slice(1) : content
+  const lines = body.split('\n')
+  let inFence = false, fenceChar = ''
+  const out: string[] = []
+  for (const line of lines) {
+    const fm = line.match(/^ {0,3}(`{3,}|~{3,})/)
+    if (fm) {
+      const ch = fm[1][0]
+      if (!inFence) { inFence = true; fenceChar = ch }
+      else if (ch === fenceChar) { inFence = false; fenceChar = '' }
+      out.push(line); continue
+    }
+    if (inFence) { out.push(line); continue }
+    const hm = line.match(/^( {0,3})(#{1,6})([\t ]|$)(.*)$/)
+    if (hm) {
+      const newLevel = Math.min(hm[2].length + shift, 6)  // H6 钳制
+      out.push(`${hm[1]}${'#'.repeat(newLevel)}${hm[3]}${hm[4]}`)
+    } else {
+      out.push(line)
+    }
+  }
+  return (hasBOM ? '\uFEFF' : '') + out.join('\n')
 }
 
 export class RuleInjector {

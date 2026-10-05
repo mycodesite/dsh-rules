@@ -10,7 +10,7 @@
 const GUIDANCE: string
 ```
 
-稳定引导段（静态文本），用于 `rulebase:guidance` 段（order 160）。保持静态以稳定系统提示词前缀、利于 KV Cache 复用。0.1.9 起规则正文段（`rulebase:rules`，order 170）以全角成对标记 `［规则库开始］` … `［规则库结束］` 包裹，空态输出占位 `（当前无全局规则与项目规则）`，使规则域成为文本自证的闭合区间（任务031）。
+稳定引导段（静态文本），用于 `rulebase:guidance` 段（order 160）。保持静态以稳定系统提示词前缀、利于 KV Cache 复用。0.1.9 起规则正文段（`rulebase:rules`，order 170）以全角成对标记 `［规则库开始］` … `［规则库结束］` 包裹，空态输出占位 `（当前无全局规则与项目规则）`，使规则域成为文本自证的闭合区间（任务031）。0.1.10 起规则文件承载标题为 H4、正文标题经差值降级到 H5 起（逐级递进 H2→H3→H4→H5），分区为 H3 标题（任务032，R1 严格逐级）。
 
 ### 类 `RuleInjector`
 
@@ -84,8 +84,11 @@ class RuleInjector {
 
 | 函数 | 说明 |
 |:--|:--|
-| `renderRules(global, project, cwd?)` | 合成「### 全局规则 / ### 项目规则」全文，首尾以 `［规则库开始］`/`［规则库结束］` 包裹；空态输出占位；超限截断正文（标记恒在截断之外） |
-| `ruleBlock(rule)` | 单条规则块：`#### 标题` + 正文 |
+| `renderRules(global, project, cwd?)` | 合成「### 全局规则 / ### 项目规则（cwd：…）」全文（分区为 H3 标题），首尾以 `［规则库开始］`/`［规则库结束］` 包裹；空态输出占位；超限截断正文（标记恒在截断之外） |
+| `ruleBlock(rule)` | 单条规则块：`#### 标题`(H4) + 重排后正文。编排：`stripLeadingTitle` 剥离首行标题 → `scanHeadings` 扫最浅层级 → `relevel` 差值降级到 H5 起（H6 钳制） |
+| `stripLeadingTitle(content, heading)` | **内部导出（供单元测试直测）**：剥离首行 ATX 标题（仅当剥 `#` 后文本 == heading；比对不中绝不误剥）。与 `titleOf` 同源正则 `^#{1,6}\s+` |
+| `scanHeadings(content)` | **内部导出（供单元测试直测）**：围栏状态机扫描最浅 ATX 标题层级 H_min（跳过代码块）；0 = 无标题。供差值降级规划 |
+| `relevel(content, shift)` | **内部导出（供单元测试直测）**：标题行整体 +shift（`Math.min(level+shift, 6)`，H6 钳制严禁 H7）；跳过围栏内与行内代码。纯字符串变换，不写盘 |
 
 ## 设计要点
 

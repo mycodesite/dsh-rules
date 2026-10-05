@@ -40,8 +40,8 @@ test('B1：满态——成对标记 + 内层 H3', async (t) => {
   assert.ok(out.startsWith(BEGIN), '应以开始标记开头')
   assert.ok(out.endsWith(END), '应以结束标记结尾')
   assert.ok(out.indexOf(BEGIN) < out.indexOf(END), '开始标记应在结束标记之前')
-  assert.ok(out.includes('### 全局规则'), '应含全局 H3')
-  assert.ok(out.includes('### 项目规则'), '应含项目 H3')
+  assert.ok(out.includes('### 全局规则'), '应含全局分区')
+  assert.ok(out.includes('### 项目规则'), '应含项目分区')
 })
 
 test('B2：仅全局——成对标记 + 无项目 H3', async (t) => {
@@ -50,8 +50,8 @@ test('B2：仅全局——成对标记 + 无项目 H3', async (t) => {
   await injector.refresh(projDir)
   const out = injector.renderFromCache(projDir)
   assert.ok(out.startsWith(BEGIN) && out.endsWith(END), '成对标记')
-  assert.ok(out.includes('### 全局规则'), '含全局 H3')
-  assert.ok(!out.includes('### 项目规则'), '不含项目 H3')
+  assert.ok(out.includes('### 全局规则'), '含全局分区')
+  assert.ok(!out.includes('### 项目规则'), '不含项目分区')
 })
 
 test('B3：仅项目（FT）——成对标记 + 无全局 H3', async (t) => {
@@ -60,8 +60,8 @@ test('B3：仅项目（FT）——成对标记 + 无全局 H3', async (t) => {
   await injector.refresh(projDir)
   const out = injector.renderFromCache(projDir)
   assert.ok(out.startsWith(BEGIN) && out.endsWith(END), '成对标记')
-  assert.ok(!out.includes('### 全局规则'), '不含全局 H3')
-  assert.ok(out.includes('### 项目规则'), '含项目 H3')
+  assert.ok(!out.includes('### 全局规则'), '不含全局分区')
+  assert.ok(out.includes('### 项目规则'), '含项目分区')
 })
 
 test('B4：空态——非空 + 占位 + 成对标记', async (t) => {
@@ -88,13 +88,15 @@ test('B5：超限截断——标记恒在末尾，截断尾注在结束标记之
 test('B6：恰好等于阈值（> 严格大于）——不截断，末尾为结束标记', async (t) => {
   const { injector, globalDir, projDir } = await makeInjector(t)
   // 构造 body 字节数恰好等于 MAX_TOTAL_BYTES。
-  // body = '### 全局规则\n\n' + ruleBlock  =  '### 全局规则\n\n' + '#### G\n\n' + rule.content
-  // 关键：rule.content 为规则文件「完整内容」，含文件自带 H1 行 '# G\n'（store.ts:81-83 保留全文）
-  const fileHead = '# G\n'                                    // 4 字节，会被 ruleBlock 原样带入 body
-  const prefix = `### 全局规则\n\n#### G\n\n${fileHead}`       // 26 + 4 = 30 字节
+  // R1 形态（0.1.10）：body = '### 全局规则\n\n' + ruleBlock
+  //   ruleBlock = '#### G\n\n' + relevel(stripped, shift)
+  //   文件写 '# G\n${content}'，stripLeadingTitle 剥离首行 '# G'（文本 == heading "G"）后正文 = content
+  //   content 无标题 ⇒ hMin=0 ⇒ shift=0 ⇒ relevel 原样
+  //   ⇒ body = '### 全局规则\n\n#### G\n\n' + content
+  const prefix = '### 全局规则\n\n#### G\n\n'                   // 16 + 2 + 6 + 2 = 26 字节
   const target = MAX_TOTAL_BYTES - Buffer.byteLength(prefix, 'utf8')
   const content = 'B'.repeat(target)                          // 单字节字符 ⇒ 字节数 = 字符数
-  await writeFile(join(globalDir, 'G.md'), `${fileHead}${content}`, 'utf8')
+  await writeFile(join(globalDir, 'G.md'), `# G\n${content}`, 'utf8')
   await injector.refresh(projDir)
   const out = injector.renderFromCache(projDir)
   assert.ok(out.endsWith(END), '末尾为结束标记')
