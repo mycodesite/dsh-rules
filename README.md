@@ -16,11 +16,11 @@
 规则仅以 `.md` 文件持久化，**不注册 dsh settings 命名空间、不写入 `settings.yaml`**。
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.7-blue.svg)](https://github.com/mycodesite/dsh-rules/releases)
+[![version](https://img.shields.io/badge/version-0.1.9-blue.svg)](https://github.com/mycodesite/dsh-rules/releases)
 
 ## 功能
 
-- **注入**：启动时扫描全局规则；每个新对话按 `agent.session.header.cwd` 扫描项目规则；全局 + 项目全量组装、全量替换，注入系统提示词。
+- **注入**：启动时扫描全局规则；每个新对话按 `agent.session.header.cwd` 扫描项目规则；全局 + 项目全量组装、全量替换，注入系统提示词。规则正文段以 `［规则库开始］` … `［规则库结束］` 成对标记包裹，为 AI 提供明确的规则库边界（0.1.9 起）。
 - **项目路径识别**：以 dsh 官方「当前主视图会话」（`sessions.list` 快照中 `retainedBy.mainView > 0` 的会话）的 `cwd` 作为当前项目路径，面板随切项目 / 切对话自动跟随；无主视图会话时视为「未选定项目」并提示。
 - **即变即用**：文件监听 + `agent.inject()`；保存规则后下一次模型请求自动采用。
 - **管理界面**：设置面板「规则」区支持全局 / 项目 tab、新建（下拉选全局/项目）、编辑（单击行或设置菜单）、删除、刷新；设置菜单与新建下拉在点击其它区域自动关闭，配色随 dsh 亮/深外观自动切换（`--dsw-alias-*` 主题 token）；项目 tab 在未选定项目时提示「请先开启一个项目对话」，保存项目规则时无项目会弹窗提示。
@@ -49,7 +49,7 @@
 dsh plugin add github:mycodesite/dsh-rules
 
 # 指定版本
-dsh plugin add github:mycodesite/dsh-rules#v0.1.7
+dsh plugin add github:mycodesite/dsh-rules#v0.1.9
 
 # 指定 profile（web / tui 等）
 dsh plugin --profile web add github:mycodesite/dsh-rules

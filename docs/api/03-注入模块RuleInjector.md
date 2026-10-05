@@ -10,7 +10,7 @@
 const GUIDANCE: string
 ```
 
-稳定引导段（静态文本），用于 `rulebase:guidance` 段（order 160）。保持静态以稳定系统提示词前缀、利于 KV Cache 复用。
+稳定引导段（静态文本），用于 `rulebase:guidance` 段（order 160）。保持静态以稳定系统提示词前缀、利于 KV Cache 复用。0.1.9 起规则正文段（`rulebase:rules`，order 170）以全角成对标记 `［规则库开始］` … `［规则库结束］` 包裹，空态输出占位 `（当前无全局规则与项目规则）`，使规则域成为文本自证的闭合区间（任务031）。
 
 ### 类 `RuleInjector`
 
@@ -46,14 +46,14 @@ class RuleInjector {
 | `cwd` | `string \| undefined` | 项目根；省略时仅刷新全局 |
 
 - 读全局 + 项目规则，合成「全局规则 + 项目规则」全文，写入缓存（key = cwd，全局用内部键）。
-- 合成结果超出 `MAX_TOTAL_BYTES` 时按字节截断并追加提示。
+- 合成结果超出 `MAX_TOTAL_BYTES` 时按字节截断**正文 body** 并追加提示；首尾边界标记在截断之外，恒在输出首尾（不会被截断吃掉）。
 
 #### `renderFromCache(cwd?)`
 
 同步读缓存，返回合成字符串。供 `systemPrompt` 段 `text` 使用。
 
 - 缓存命中 → 对应 cwd 的合成结果。
-- 未命中该 cwd → 回退全局缓存；全局也空 → 返回 `''`。
+- 未命中该 cwd → 回退全局缓存；全局也空 → 返回 `［规则库开始］\n\n（当前无全局规则与项目规则）\n\n［规则库结束］`（0.1.9 起空态不再返回 `''`，避免宿主 filter 丢弃该段致引导句悬空）。
 - 纯同步、零 IO，保证 `text` 签名 `(context) => string`。
 
 #### ~~`currentProjectCwd()`~~（0.1.8 已删除）
@@ -84,7 +84,7 @@ class RuleInjector {
 
 | 函数 | 说明 |
 |:--|:--|
-| `renderRules(global, project, cwd?)` | 合成「### 全局规则 / ### 项目规则」全文，超限截断 |
+| `renderRules(global, project, cwd?)` | 合成「### 全局规则 / ### 项目规则」全文，首尾以 `［规则库开始］`/`［规则库结束］` 包裹；空态输出占位；超限截断正文（标记恒在截断之外） |
 | `ruleBlock(rule)` | 单条规则块：`#### 标题` + 正文 |
 
 ## 设计要点

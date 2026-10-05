@@ -22,7 +22,7 @@ export function apply(ctx: Context): void
 2. 实例化 `RulesService`。
 3. **注册提示词段**（`ctx.inject(['systemPrompt'], ...)`）：
    - `rulebase:guidance`（order 160，`text: GUIDANCE`）——静态引导段；
-   - `rulebase:rules`（order 170，动态 `text`）——在 `injector.boot()` 完成后注册，`text` 内联经 `assembleCtx.agent?.session.header.cwd ?? process.cwd()` 解析 cwd 后调用 `renderFromCache`（同步读缓存）。
+   - `rulebase:rules`（order 170，动态 `text`）——在 `injector.boot()` 完成后注册，`text` 内联经 `assembleCtx.agent?.session.header.cwd ?? process.cwd()` 解析 cwd 后调用 `renderFromCache`（同步读缓存）。0.1.9 起该段输出以全角成对标记 `［规则库开始］` … `［规则库结束］` 包裹，为规则域提供文本自证的闭合边界（任务031）。
 4. **注册 RPC 通道**（`ctx.inject(['connection'], ...)`）：`c.connection.rpc.handle('/rulebase', service.dispatch, { authority: 'loopback' })`。
 5. `injector.watch()` 装配文件监听与会话钩子。
 

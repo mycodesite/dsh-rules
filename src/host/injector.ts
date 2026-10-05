@@ -11,23 +11,30 @@ export const GUIDANCE = `## 规则库（RuleBase）
 
 本环境由 DSH 插件 rulebase 注入“规则”。下方【全局规则】/【项目规则】是当前生效的约束，请在对话与执行中严格遵守。`
 
+/** 规则库注入边界标记：全角方括号，规则域/宿主段/VCP 段全库零碰撞（任务031 实测） */
+const RULES_BOUNDARY_BEGIN = '［规则库开始］'
+const RULES_BOUNDARY_END = '［规则库结束］'
+/** 空态占位：替代原 return ''（空段被宿主 renderPrompt filter 丢弃致引导句悬空） */
+const RULES_EMPTY = '（当前无全局规则与项目规则）'
+
 /** 全局缓存键（无 cwd 时） */
 const GLOBAL_KEY = '__global__'
 
-/** 合成全局+项目规则全文，超出总量则截断 */
+/** 合成全局+项目规则全文，首尾以边界标记包裹；空态输出占位；超出总量则截断正文（标记恒在截断之外） */
 function renderRules(global: Rule[], project: Rule[], cwd?: string): string {
   const parts: string[] = []
   if (global.length > 0) parts.push('### 全局规则', ...global.map(ruleBlock))
   if (project.length > 0) {
     parts.push(`### 项目规则${cwd ? `（cwd：${cwd}）` : ''}`, ...project.map(ruleBlock))
   }
-  if (parts.length === 0) return ''
-  let text = parts.join('\n\n')
-  if (Buffer.byteLength(text, 'utf8') > MAX_TOTAL_BYTES) {
-    const cut = Buffer.from(text, 'utf8').subarray(0, MAX_TOTAL_BYTES).toString('utf8')
-    text = `${cut}\n\n> …（规则总量超限，已截断）`
+  // 空态：不再返回 ''，改占位（否则宿主 filter 丢弃该段、引导句悬空）
+  let body = parts.length > 0 ? parts.join('\n\n') : RULES_EMPTY
+  if (Buffer.byteLength(body, 'utf8') > MAX_TOTAL_BYTES) {
+    const cut = Buffer.from(body, 'utf8').subarray(0, MAX_TOTAL_BYTES).toString('utf8')
+    body = `${cut}\n\n> …（规则总量超限，已截断）`
   }
-  return text
+  // 标记在截断之外，恒在首尾，不会被截断吃掉
+  return `${RULES_BOUNDARY_BEGIN}\n\n${body}\n\n${RULES_BOUNDARY_END}`
 }
 
 function ruleBlock(rule: Rule): string {
